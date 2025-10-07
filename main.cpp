@@ -1,5 +1,7 @@
 #include <raylib.h>
 
+#include <opencv2/alphamat.hpp>
+
 const int TARGET_FPS = 20;
 
 int main() {
