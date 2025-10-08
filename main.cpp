@@ -42,8 +42,7 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
   // TODO: Do we need scale factor etc?
   cv::Mat blob;
   cv::dnn::blobFromImage(frame, blob, 1. / 255.,
-			 cv::Size(YOLO_WIDTH, YOLO_HEIGHT), cv::Scalar(), true,
-			 false);
+			 cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
 
   net.setInput(blob);
   std::vector<cv::Mat> outputs;
@@ -89,7 +88,7 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
     std::println("Found {} at {} {}", maxScoreClassId, x, y);
 
     detections.push_back(
-	{maxScoreClassId, correctedConfidence,
+	{maxScoreClassId - 4, correctedConfidence,
 	 Rectangle(x * scaleX, y * scaleY, w * scaleX, h * scaleY)});
   }
 
@@ -98,8 +97,8 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
 }
 
 int main() {
-  const int screenWidth = 800;
-  const int screenHeight = 450;
+  const int screenWidth = YOLO_WIDTH;	 // 800;
+  const int screenHeight = YOLO_HEIGHT;	 // 450;
 
   InitWindow(screenWidth, screenHeight, "debug display");
   SetTargetFPS(TARGET_FPS);
@@ -163,9 +162,11 @@ int main() {
     // --- DRAWING CALLS ---
 
     DrawTexture(texture, 0, 0, WHITE);
-    // DrawText("Hello world.", 20, 20, 20, GREEN);
 
     for (const Detection& detection : detections) {
+      const Rectangle& rect = detection.rect;
+      const auto classname = classes[detection.classIdx].c_str();
+      DrawText(classname, rect.x + 2, rect.y + 2, 6, GREEN);
       DrawRectangleLinesEx(detection.rect, 2.f, GREEN);
     }
 
