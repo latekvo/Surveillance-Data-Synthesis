@@ -4,7 +4,10 @@
 #include <opencv2/opencv.hpp>
 #include <print>
 
+#include "list_parser.h"
+
 const int TARGET_FPS = 20;
+std::string STREAMS_FILE = "streams.listfile";
 
 int main() {
   const int screenWidth = 800;
@@ -13,7 +16,16 @@ int main() {
   InitWindow(screenWidth, screenHeight, "debug display");
   SetTargetFPS(TARGET_FPS);
 
-  cv::VideoCapture video("...");
+  std::vector streams = parseListFile(STREAMS_FILE);
+
+  if (streams.size() == 0) {
+    std::println(
+	"Error - No streams provided! Add at least one entry to "
+	"'streams.listfile'.");
+    return -1;
+  }
+
+  cv::VideoCapture video(streams[0]);
 
   if (!video.isOpened()) {
     std::println("Error - Could not open video!");
@@ -42,9 +54,10 @@ int main() {
     rayImage.data = cvFrame.data;
     rayImage.width = cvFrame.cols;
     rayImage.height = cvFrame.rows;
-    SetWindowSize(cvFrame.cols, cvFrame.rows);
 
     Texture2D texture = LoadTextureFromImage(rayImage);
+    texture.width = 800;
+    texture.height = 450;
 
     DrawTexture(texture, 0, 0, WHITE);
     DrawText("Hello world.", 20, 20, 20, GREEN);
