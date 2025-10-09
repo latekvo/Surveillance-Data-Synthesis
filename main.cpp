@@ -18,28 +18,19 @@ const float YOLO_WIDTH = 640.0;
 const float YOLO_HEIGHT = 640.0;
 
 const uint DNN_DIMENSIONS = 85;	 // 4: rect, 1: conf, 80: class ids
+const uint DNN_OUT_ROWS = 25200;
 
 struct Detection {
   uint classIdx;
   float confidence;
-  Rectangle rect;  // raylib rect
+  Rectangle rect;
 };
 
-cv::Mat toSquare(const cv::Mat& source, uint size, uint hOffsetIdx,
-		 uint vOffsetIdx) {
-  int col = source.cols;
-  int row = source.rows;
-  int _max = MAX(col, row);
-  cv::Mat result = cv::Mat::zeros(_max, _max, CV_8UC3);
-  source.copyTo(result(cv::Rect(0, 0, col, row)));
-  return result;
-}
-
 std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
+				    std::vector<std::string> classList,
 				    uint sourceWidth, uint sourceHeight) {
   std::vector<Detection> detections;
 
-  // TODO: Do we need scale factor etc?
   cv::Mat blob;
   cv::dnn::blobFromImage(frame, blob, 1. / 255.,
 			 cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
@@ -51,48 +42,40 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
   const float scaleX = sourceWidth / YOLO_WIDTH,
 	      scaleY = sourceHeight / YOLO_HEIGHT;
 
-  for (const cv::Mat& output : outputs) {
+  // `data` is a blob, `outputs` contains one such blob. no fragmentation risk
+  float* data = (float*)outputs[0].data;
+
+  for (int i = 0; i < DNN_OUT_ROWS - 1; i++) {
     // data is a blob of floats
-    const float* data = (float*)output.data;
+    float confidence = data[4];
 
-    const float confidence = data[4];
+    // Process only detections with confidence above the threshold
+    if (confidence >= 0.5) {
+      // Get class scores and find the class with the highest score
+      float* classScores = data + 5;
+      cv::Mat scores(1, classList.size(), CV_32FC1, classScores);
+      cv::Point classIdx;
+      double bestScore;
+      minMaxLoc(scores, 0, &bestScore, 0, &classIdx);
 
-    if (confidence < 0.5) {
-      std::println("Skipping, did not pass primary threshold");
-      // continue;
-    }
+      // If the class score is above the threshold, store the detection
+      if (bestScore > 0.5) {
+	const float x = data[0], y = data[1], w = data[2], h = data[3];
 
-    const float x = data[0], y = data[1], w = data[2], h = data[3];
+	int left = int((x - 0.5 * w) * scaleX);
+	int top = int((y - 0.5 * h) * scaleY);
+	int width = int(w * scaleX);
+	int height = int(h * scaleY);
 
-    float maxScore = 0;
-    uint maxScoreClassId = -1;
-
-    // TODO: Check if minMaxLoc is more efficient
-    for (uint i = 5; i < 85; i++) {
-      const float score = data[i];
-      if (data[i] > maxScore) {
-	maxScore = score;
-	maxScoreClassId = i;
+	detections.push_back(Detection(classIdx.x, confidence,
+				       Rectangle(left, top, width, height)));
       }
     }
-
-    const float correctedConfidence = confidence * maxScore;
-
-    if (confidence < 0.5) {
-      std::println("Skipping, did not pass secondary threshold");
-      // continue;
-    }
-
     // TODO: Apply NMS algorithm to clear overlapping multi-hits
 
-    std::println("Found {} at {} {}", maxScoreClassId, x, y);
-
-    detections.push_back(
-	{maxScoreClassId - 4, correctedConfidence,
-	 Rectangle(x * scaleX, y * scaleY, w * scaleX, h * scaleY)});
+    data += DNN_DIMENSIONS;
   }
 
-  std::println("Found {} objects.", detections.size());
   return detections;
 }
 
@@ -157,7 +140,7 @@ int main() {
     cv::resize(cvFrame, yoloInputFrame, cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
 
     std::vector<Detection> detections =
-	runDetection(yolo, yoloInputFrame, screenWidth, screenHeight);
+	runDetection(yolo, yoloInputFrame, classes, screenWidth, screenHeight);
 
     // --- DRAWING CALLS ---
 
@@ -166,7 +149,8 @@ int main() {
     for (const Detection& detection : detections) {
       const Rectangle& rect = detection.rect;
       const auto classname = classes[detection.classIdx].c_str();
-      DrawText(classname, rect.x + 2, rect.y + 2, 6, GREEN);
+
+      DrawText(classname, rect.x + 2, rect.y - 6, 6, GREEN);
       DrawRectangleLinesEx(detection.rect, 2.f, GREEN);
     }
 
