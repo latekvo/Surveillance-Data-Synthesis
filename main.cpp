@@ -22,6 +22,15 @@ const uint DNN_DIMENSIONS = 85;	 // 4: rect, 1: conf, 80: class ids
 const uint DNN_OUT_ROWS = 25200;
 const float DNN_MIN_CONFIDENCE = 0.5;
 
+enum ClassId {
+  PERSON = 0,
+  BICYCLE = 1,
+  CAR = 2,
+  MOTORCYCLE = 3,
+  BUS = 5,
+  TRUCK = 7,
+};
+
 struct Detection {
   uint classIdx;
   float confidence;
@@ -58,7 +67,13 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
       cv::Mat scores(1, classList.size(), CV_32FC1, classScores);
       cv::Point classIdx;
       double bestScore;
-      minMaxLoc(scores, 0, &bestScore, 0, &classIdx);
+      cv::minMaxLoc(scores, 0, &bestScore, 0, &classIdx);
+
+      // Allow humans only
+      // TODO: Make a whitelist of entities
+      if (classIdx.x != ClassId::PERSON) {
+	continue;
+      }
 
       // If the class score is above the threshold, store the detection
       if (bestScore > DNN_MIN_CONFIDENCE) {
