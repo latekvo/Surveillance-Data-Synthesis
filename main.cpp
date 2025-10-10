@@ -2,6 +2,7 @@
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <opencv2/videoio.hpp>
 #include <print>
 
 #include "list_parser.h"
@@ -19,6 +20,7 @@ const float YOLO_HEIGHT = 640.0;
 
 const uint DNN_DIMENSIONS = 85;	 // 4: rect, 1: conf, 80: class ids
 const uint DNN_OUT_ROWS = 25200;
+const float DNN_MIN_CONFIDENCE = 0.5;
 
 struct Detection {
   uint classIdx;
@@ -50,7 +52,7 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
     float confidence = data[4];
 
     // Process only detections with confidence above the threshold
-    if (confidence >= 0.5) {
+    if (confidence > DNN_MIN_CONFIDENCE) {
       // Get class scores and find the class with the highest score
       float* classScores = data + 5;
       cv::Mat scores(1, classList.size(), CV_32FC1, classScores);
@@ -59,7 +61,7 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
       minMaxLoc(scores, 0, &bestScore, 0, &classIdx);
 
       // If the class score is above the threshold, store the detection
-      if (bestScore > 0.5) {
+      if (bestScore > DNN_MIN_CONFIDENCE) {
 	const float x = data[0], y = data[1], w = data[2], h = data[3];
 
 	int left = int((x - 0.5 * w) * scaleX);
@@ -80,8 +82,8 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
 }
 
 int main() {
-  const int screenWidth = YOLO_WIDTH;	 // 800;
-  const int screenHeight = YOLO_HEIGHT;	 // 450;
+  const int screenWidth = 800;
+  const int screenHeight = 450;
 
   InitWindow(screenWidth, screenHeight, "debug display");
   SetTargetFPS(TARGET_FPS);
@@ -95,7 +97,11 @@ int main() {
     return -1;
   }
 
-  cv::VideoCapture video(streams[0]);
+  cv::VideoCapture video(streams[0], cv::CAP_FFMPEG);
+
+  // Removes buffer, but this doesn't work with most backends.
+  // If this line does work, it reduces latency by a lot.
+  video.set(cv::CAP_PROP_BUFFERSIZE, 1);
 
   if (!video.isOpened()) {
     std::println("Error - Could not open video!");
@@ -112,14 +118,28 @@ int main() {
 
   cv::dnn::Net yolo = cv::dnn::readNet(DNN_NET_FILE);
   yolo.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-  yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);  // TODO: Use CUDA
+  yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);  // TODO: Use CUDA
   std::vector<std::string> classes = parseListFile(CLASSES_FILE);
 
   while (!WindowShouldClose()) {
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
+    // Skip buffered frames, this is a bit hacky, but found no better way
+    // TODO: Calculate ideal skip-rate on the go
+    uint skippedFrames = 0;
+    while (video.grab() && skippedFrames < 5) {
+      skippedFrames++;
+    }
+
     video.read(cvFrame);
+
+    // --- DETECTION LOGIC ---
+
+    cv::resize(cvFrame, cvFrame, cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
+
+    std::vector<Detection> detections =
+	runDetection(yolo, cvFrame, classes, screenWidth, screenHeight);
 
     // --- RENDERING LOGIC ---
 
@@ -134,14 +154,6 @@ int main() {
     texture.width = screenWidth;
     texture.height = screenHeight;
 
-    // --- DETECTION LOGIC ---
-
-    cv::Mat yoloInputFrame;
-    cv::resize(cvFrame, yoloInputFrame, cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
-
-    std::vector<Detection> detections =
-	runDetection(yolo, yoloInputFrame, classes, screenWidth, screenHeight);
-
     // --- DRAWING CALLS ---
 
     DrawTexture(texture, 0, 0, WHITE);
@@ -155,7 +167,6 @@ int main() {
     }
 
     EndDrawing();
-
     UnloadTexture(texture);
   }
 
