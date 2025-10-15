@@ -18,9 +18,9 @@ std::string CLASSES_FILE = "coco_labels.listfile";
 const float YOLO_WIDTH = 640.0;
 const float YOLO_HEIGHT = 640.0;
 
-const uint DNN_DIMENSIONS = 85;	 // 4: rect, 1: conf, 80: class ids
+const uint CLASS_COUNT = 80;
 const uint DNN_OUT_ROWS = 25200;
-const float DNN_MIN_CONFIDENCE = 0.5;
+const float DNN_MIN_CONFIDENCE = 0.8;
 
 enum ClassId {
   PERSON = 0,
@@ -37,60 +37,80 @@ struct Detection {
   Rectangle rect;
 };
 
+constexpr float sigmoid(float value) {
+  return 0.5 * (value / (1 + abs(value)) + 1);
+}
+
 std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
-				    std::vector<std::string> classList,
-				    uint sourceWidth, uint sourceHeight) {
+                                    std::vector<std::string> classList) {
   std::vector<Detection> detections;
 
   cv::Mat blob;
   cv::dnn::blobFromImage(frame, blob, 1. / 255.,
-			 cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
+                         cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
 
   net.setInput(blob);
   std::vector<cv::Mat> outputs;
   net.forward(outputs, net.getUnconnectedOutLayersNames());
 
-  const float scaleX = sourceWidth / YOLO_WIDTH,
-	      scaleY = sourceHeight / YOLO_HEIGHT;
-
   // `data` is a blob, `outputs` contains one such blob. no fragmentation risk
+  // initially removing DNN_DIMENSIONS, since it'll be added on the first iter
   float* data = (float*)outputs[0].data;
 
-  for (int i = 0; i < DNN_OUT_ROWS - 1; i++) {
+  for (int i = 0; i < DNN_OUT_ROWS; i++) {
+    if (i > 0) {
+      data += CLASS_COUNT + 5;
+    }
+
     // data is a blob of floats
-    float confidence = data[4];
+    float x = data[0], y = data[1], w = data[2], h = data[3], c = data[4];
+
+    std::println("{}: c: {},\tx: {},\ty: {},\tw: {},\th: {}", i, c, x, y, w, h);
 
     // Process only detections with confidence above the threshold
-    if (confidence > DNN_MIN_CONFIDENCE) {
-      // Get class scores and find the class with the highest score
-      float* classScores = data + 5;
-      cv::Mat scores(1, classList.size(), CV_32FC1, classScores);
-      cv::Point classIdx;
-      double bestScore;
-      cv::minMaxLoc(scores, 0, &bestScore, 0, &classIdx);
-
-      // Allow humans only
-      // TODO: Make a whitelist of entities
-      if (classIdx.x != ClassId::PERSON) {
-	continue;
-      }
-
-      // If the class score is above the threshold, store the detection
-      if (bestScore > DNN_MIN_CONFIDENCE) {
-	const float x = data[0], y = data[1], w = data[2], h = data[3];
-
-	int left = int((x - 0.5 * w) * scaleX);
-	int top = int((y - 0.5 * h) * scaleY);
-	int width = int(w * scaleX);
-	int height = int(h * scaleY);
-
-	detections.push_back(Detection(classIdx.x, confidence,
-				       Rectangle(left, top, width, height)));
-      }
+    if (c < DNN_MIN_CONFIDENCE) {
+      continue;
     }
-    // TODO: Apply NMS algorithm to clear overlapping multi-hits
 
-    data += DNN_DIMENSIONS;
+    // Get class scores and find the class with the highest score
+    float* classScores = data + 5;
+    cv::Mat scores(1, classList.size(), CV_32FC1, classScores);
+    cv::Point classIdx;
+    double rawBestScore;
+    cv::minMaxLoc(scores, 0, &rawBestScore, 0, &classIdx);
+
+    double bestScore = sigmoid(rawBestScore);
+
+    if (bestScore < DNN_MIN_CONFIDENCE) {
+      continue;
+    }
+
+    // TODO: Make a whitelist of entities
+    if (classIdx.x != ClassId::PERSON) {
+      // Allow humans only
+      // continue;
+    }
+
+    // FIXME: Apparently w & h don't need a sigmoid, but an exp + anchor
+    // multiplication (????)
+    float xS = sigmoid(x), yS = sigmoid(y), wS = sigmoid(w), hS = sigmoid(h);
+
+    std::println("B: {}, c: {},\tx: {},\ty: {},\tw: {},\th: {}", i, bestScore,
+                 xS, yS, wS, hS);
+
+    Rectangle rect;
+
+    // rect.x = (xS - 0.5 * wS) * YOLO_WIDTH;
+    // rect.y = (yS - 0.5 * hS) * YOLO_HEIGHT;
+    // Using centerpoints for now for debugging
+    rect.x = xS * YOLO_WIDTH;
+    rect.y = yS * YOLO_HEIGHT;
+
+    // w, h ignored for now for the sake of debugging this
+    rect.width = wS * YOLO_WIDTH;
+    rect.height = hS * YOLO_HEIGHT;
+
+    detections.push_back(Detection(classIdx.x, c, rect));
   }
 
   return detections;
@@ -107,8 +127,8 @@ int main() {
 
   if (streams.size() == 0) {
     std::println(
-	"Error - No streams provided! Add at least one entry to "
-	"'streams.listfile'.");
+        "Error - No streams provided! Add at least one entry to "
+        "'streams.listfile'.");
     return -1;
   }
 
@@ -133,7 +153,7 @@ int main() {
 
   cv::dnn::Net yolo = cv::dnn::readNet(DNN_NET_FILE);
   yolo.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-  yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);  // TODO: Use CUDA
+  yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
   std::vector<std::string> classes = parseListFile(CLASSES_FILE);
 
   while (!WindowShouldClose()) {
@@ -151,10 +171,12 @@ int main() {
 
     // --- DETECTION LOGIC ---
 
-    cv::resize(cvFrame, cvFrame, cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
-
+    cv::Mat detectionFrame = cvFrame(cv::Rect(0, 0, YOLO_WIDTH, YOLO_HEIGHT));
     std::vector<Detection> detections =
-	runDetection(yolo, cvFrame, classes, screenWidth, screenHeight);
+        runDetection(yolo, detectionFrame, classes);
+
+    // TODO: runDetection on every fragment of the cvFrame
+    // TODO: Apply NMS algorithm to clear overlapping multi-hits
 
     // --- RENDERING LOGIC ---
 
@@ -169,17 +191,32 @@ int main() {
     texture.width = screenWidth;
     texture.height = screenHeight;
 
+    // Video-to-display scaling
+    const float xScaling = float(screenWidth) / cvFrame.cols;
+    const float yScaling = float(screenHeight) / cvFrame.rows;
+
     // --- DRAWING CALLS ---
 
     DrawTexture(texture, 0, 0, WHITE);
 
     for (const Detection& detection : detections) {
-      const Rectangle& rect = detection.rect;
+      Rectangle rect = detection.rect;
       const auto classname = classes[detection.classIdx].c_str();
 
-      DrawText(classname, rect.x + 2, rect.y - 6, 6, GREEN);
-      DrawRectangleLinesEx(detection.rect, 2.f, GREEN);
+      rect.x = float(rect.x) * xScaling;
+      rect.y = float(rect.y) * yScaling;
+      rect.width = float(rect.width) * xScaling;
+      rect.height = float(rect.height) * yScaling;
+
+      DrawText(classname, rect.x + 2, rect.y - 6, 6, WHITE);
+      // DrawRectangleLinesEx(rect, 2.f, WHITE);
+      DrawRectangle(rect.x, rect.y, 4, 4, GREEN);
     }
+
+    // Detection square
+    DrawRectangleLinesEx(Rectangle(0, 0, int(YOLO_WIDTH * xScaling),
+                                   int(YOLO_HEIGHT * yScaling)),
+                         2.f, GREEN);
 
     EndDrawing();
     UnloadTexture(texture);
