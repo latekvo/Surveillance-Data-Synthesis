@@ -15,8 +15,7 @@ std::string STREAMS_FILE = "streams.listfile";
 std::string DNN_NET_FILE = "model.onnx";
 std::string CLASSES_FILE = "coco_labels.listfile";
 
-const float YOLO_WIDTH = 640.0;
-const float YOLO_HEIGHT = 640.0;
+const float YOLO_SIZE = 640.0;
 
 const uint CLASS_COUNT = 80;
 const uint DNN_OUT_ROWS = 25200;
@@ -47,15 +46,21 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
 
   cv::Mat blob;
   cv::dnn::blobFromImage(frame, blob, 1. / 255.,
-                         cv::Size(YOLO_WIDTH, YOLO_HEIGHT));
+                         cv::Size(YOLO_SIZE, YOLO_SIZE));
 
   net.setInput(blob);
   std::vector<cv::Mat> outputs;
   net.forward(outputs, net.getUnconnectedOutLayersNames());
 
   // `data` is a blob, `outputs` contains one such blob. no fragmentation risk
-  // initially removing DNN_DIMENSIONS, since it'll be added on the first iter
-  float* data = (float*)outputs[0].data;
+  cv::Mat output = outputs[0];
+
+  if (output.cols == -1 || output.rows == -1) {
+    std::println("cv::dnn::Net.forward() failed. Check net input.");
+    exit(1);
+  }
+
+  float* data = (float*)output.data;
 
   for (int i = 0; i < DNN_OUT_ROWS; i++) {
     if (i > 0) {
@@ -103,12 +108,12 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
     // rect.x = (xS - 0.5 * wS) * YOLO_WIDTH;
     // rect.y = (yS - 0.5 * hS) * YOLO_HEIGHT;
     // Using centerpoints for now for debugging
-    rect.x = xS * YOLO_WIDTH;
-    rect.y = yS * YOLO_HEIGHT;
+    rect.x = xS * YOLO_SIZE;
+    rect.y = yS * YOLO_SIZE;
 
     // w, h ignored for now for the sake of debugging this
-    rect.width = wS * YOLO_WIDTH;
-    rect.height = hS * YOLO_HEIGHT;
+    rect.width = wS * YOLO_SIZE;
+    rect.height = hS * YOLO_SIZE;
 
     detections.push_back(Detection(classIdx.x, c, rect));
   }
@@ -116,9 +121,22 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
   return detections;
 }
 
+cv::Mat imageToYoloFrame(cv::Mat frame) {
+  uint x = frame.cols, y = frame.rows;
+  uint max = std::max(x, y);
+  float scale = float(YOLO_SIZE) / float(max);
+  uint rX = std::floor(x * scale), rY = std::floor(y * scale);
+  std::println("Scale: {}, x: {}, y: {}", scale, rX, rY);
+  cv::Mat adjusted;
+  cv::resize(frame, adjusted, cv::Size(rX, rY));
+  cv::Mat output = cv::Mat::zeros(YOLO_SIZE, YOLO_SIZE, CV_8UC3);
+  adjusted.copyTo(output(cv::Rect(0, 0, adjusted.cols, adjusted.rows)));
+  return output;
+}
+
 int main() {
-  const int screenWidth = 800;
-  const int screenHeight = 450;
+  const int screenWidth = YOLO_SIZE;
+  const int screenHeight = YOLO_SIZE;
 
   InitWindow(screenWidth, screenHeight, "debug display");
   SetTargetFPS(TARGET_FPS);
@@ -143,10 +161,9 @@ int main() {
     return -1;
   }
 
+  cv::Mat rawCvFrame;
   cv::Mat cvFrame;
   Image rayImage;
-
-  video.read(cvFrame);
 
   rayImage.mipmaps = 1;
   rayImage.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
@@ -167,16 +184,14 @@ int main() {
       skippedFrames++;
     }
 
-    video.read(cvFrame);
+    video.read(rawCvFrame);
+    cvFrame = imageToYoloFrame(rawCvFrame);
 
     // --- DETECTION LOGIC ---
 
-    cv::Mat detectionFrame = cvFrame(cv::Rect(0, 0, YOLO_WIDTH, YOLO_HEIGHT));
+    cv::Mat detectionFrame = cvFrame(cv::Rect(0, 0, YOLO_SIZE, YOLO_SIZE));
     std::vector<Detection> detections =
-        runDetection(yolo, detectionFrame, classes);
-
-    // TODO: runDetection on every fragment of the cvFrame
-    // TODO: Apply NMS algorithm to clear overlapping multi-hits
+        {};  // runDetection(yolo, detectionFrame, classes);
 
     // --- RENDERING LOGIC ---
 
@@ -191,10 +206,6 @@ int main() {
     texture.width = screenWidth;
     texture.height = screenHeight;
 
-    // Video-to-display scaling
-    const float xScaling = float(screenWidth) / cvFrame.cols;
-    const float yScaling = float(screenHeight) / cvFrame.rows;
-
     // --- DRAWING CALLS ---
 
     DrawTexture(texture, 0, 0, WHITE);
@@ -203,20 +214,15 @@ int main() {
       Rectangle rect = detection.rect;
       const auto classname = classes[detection.classIdx].c_str();
 
-      rect.x = float(rect.x) * xScaling;
-      rect.y = float(rect.y) * yScaling;
-      rect.width = float(rect.width) * xScaling;
-      rect.height = float(rect.height) * yScaling;
+      rect.x = float(rect.x);
+      rect.y = float(rect.y);
+      rect.width = float(rect.width);
+      rect.height = float(rect.height);
 
       DrawText(classname, rect.x + 2, rect.y - 6, 6, WHITE);
       // DrawRectangleLinesEx(rect, 2.f, WHITE);
       DrawRectangle(rect.x, rect.y, 4, 4, GREEN);
     }
-
-    // Detection square
-    DrawRectangleLinesEx(Rectangle(0, 0, int(YOLO_WIDTH * xScaling),
-                                   int(YOLO_HEIGHT * yScaling)),
-                         2.f, GREEN);
 
     EndDrawing();
     UnloadTexture(texture);
