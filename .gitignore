@@ -2,6 +2,12 @@
 /app
 /.ycm_extra_conf.py
 
+# Test images
+/*.jpg
+/*.jpeg
+/*.png
+/*.webp
+
 # Private configs
 /streams.listfile
 
