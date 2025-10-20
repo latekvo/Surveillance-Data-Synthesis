@@ -12,7 +12,7 @@ typedef unsigned int uint;
 const int TARGET_FPS = 20;
 
 std::string STREAMS_FILE = "streams.listfile";
-std::string DNN_NET_FILE = "model.onnx";
+std::string DNN_NET_FILE = "yolo5s_static.onnx";
 std::string CLASSES_FILE = "coco_labels.listfile";
 
 const float YOLO_SIZE = 640.0;
@@ -36,23 +36,26 @@ struct Detection {
   Rectangle rect;
 };
 
-constexpr float sigmoid(float value) {
-  return 0.5 * (value / (1 + abs(value)) + 1);
-}
-
 std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
                                     std::vector<std::string> classList) {
-  std::vector<Detection> detections;
+  if (frame.cols != YOLO_SIZE || frame.rows != YOLO_SIZE) {
+    std::println("Invalid Net input dimensions. Check 'runDetection' input.");
+    exit(1);
+  }
 
   cv::Mat blob;
-  cv::dnn::blobFromImage(frame, blob, 1. / 255.,
-                         cv::Size(YOLO_SIZE, YOLO_SIZE));
+  cv::dnn::blobFromImage(frame, blob, 1. / 255., cv::Size(YOLO_SIZE, YOLO_SIZE),
+                         true, false);
+
+  if (blob.empty()) {
+    std::println("Failed loading net input blob.");
+    exit(1);
+  }
 
   net.setInput(blob);
   std::vector<cv::Mat> outputs;
   net.forward(outputs, net.getUnconnectedOutLayersNames());
 
-  // `data` is a blob, `outputs` contains one such blob. no fragmentation risk
   cv::Mat output = outputs[0];
 
   if (output.cols == -1 || output.rows == -1) {
@@ -60,7 +63,10 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
     exit(1);
   }
 
+  // `data` is a blob, `outputs` contains one such blob. no fragmentation risk
   float* data = (float*)output.data;
+
+  std::vector<Detection> detections;
 
   for (int i = 0; i < DNN_OUT_ROWS; i++) {
     if (i > 0) {
@@ -84,7 +90,7 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
     double rawBestScore;
     cv::minMaxLoc(scores, 0, &rawBestScore, 0, &classIdx);
 
-    double bestScore = sigmoid(rawBestScore);
+    double bestScore = rawBestScore;
 
     if (bestScore < DNN_MIN_CONFIDENCE) {
       continue;
@@ -96,24 +102,17 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
       // continue;
     }
 
-    // FIXME: Apparently w & h don't need a sigmoid, but an exp + anchor
-    // multiplication (????)
-    float xS = sigmoid(x), yS = sigmoid(y), wS = sigmoid(w), hS = sigmoid(h);
-
-    std::println("B: {}, c: {},\tx: {},\ty: {},\tw: {},\th: {}", i, bestScore,
-                 xS, yS, wS, hS);
-
     Rectangle rect;
 
     // rect.x = (xS - 0.5 * wS) * YOLO_WIDTH;
     // rect.y = (yS - 0.5 * hS) * YOLO_HEIGHT;
     // Using centerpoints for now for debugging
-    rect.x = xS * YOLO_SIZE;
-    rect.y = yS * YOLO_SIZE;
+    rect.x = x * YOLO_SIZE;
+    rect.y = y * YOLO_SIZE;
 
     // w, h ignored for now for the sake of debugging this
-    rect.width = wS * YOLO_SIZE;
-    rect.height = hS * YOLO_SIZE;
+    rect.width = w * YOLO_SIZE;
+    rect.height = h * YOLO_SIZE;
 
     detections.push_back(Detection(classIdx.x, c, rect));
   }
@@ -122,11 +121,11 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
 }
 
 cv::Mat imageToYoloFrame(cv::Mat frame) {
+  std::println("foobar");
   uint x = frame.cols, y = frame.rows;
   uint max = std::max(x, y);
   float scale = float(YOLO_SIZE) / float(max);
   uint rX = std::floor(x * scale), rY = std::floor(y * scale);
-  std::println("Scale: {}, x: {}, y: {}", scale, rX, rY);
   cv::Mat adjusted;
   cv::resize(frame, adjusted, cv::Size(rX, rY));
   cv::Mat output = cv::Mat::zeros(YOLO_SIZE, YOLO_SIZE, CV_8UC3);
@@ -168,9 +167,9 @@ int main() {
   rayImage.mipmaps = 1;
   rayImage.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
 
-  cv::dnn::Net yolo = cv::dnn::readNet(DNN_NET_FILE);
+  cv::dnn::Net yolo = cv::dnn::readNetFromONNX(DNN_NET_FILE);
   yolo.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-  yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CUDA);
+  yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
   std::vector<std::string> classes = parseListFile(CLASSES_FILE);
 
   while (!WindowShouldClose()) {
@@ -189,14 +188,13 @@ int main() {
 
     // --- DETECTION LOGIC ---
 
-    cv::Mat detectionFrame = cvFrame(cv::Rect(0, 0, YOLO_SIZE, YOLO_SIZE));
-    std::vector<Detection> detections =
-        {};  // runDetection(yolo, detectionFrame, classes);
+    std::vector<Detection> detections = runDetection(yolo, cvFrame, classes);
 
     // --- RENDERING LOGIC ---
 
     // OpenCV and raylib use different pixel formats
     cv::cvtColor(cvFrame, cvFrame, cv::COLOR_BGR2RGB);
+
     // remap OpenCV to raylib image, no copy, using shared memory
     rayImage.data = cvFrame.data;
     rayImage.width = cvFrame.cols;
@@ -219,7 +217,7 @@ int main() {
       rect.width = float(rect.width);
       rect.height = float(rect.height);
 
-      DrawText(classname, rect.x + 2, rect.y - 6, 6, WHITE);
+      // DrawText(classname, rect.x + 2, rect.y - 6, 6, WHITE);
       // DrawRectangleLinesEx(rect, 2.f, WHITE);
       DrawRectangle(rect.x, rect.y, 4, 4, GREEN);
     }
