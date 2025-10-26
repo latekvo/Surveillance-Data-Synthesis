@@ -1,3 +1,4 @@
+#include <onnxruntime/onnxruntime_cxx_api.h>
 #include <raylib.h>
 
 #include <opencv2/highgui.hpp>
@@ -12,14 +13,15 @@ typedef unsigned int uint;
 const int TARGET_FPS = 20;
 
 std::string STREAMS_FILE = "streams.listfile";
-std::string DNN_NET_FILE = "yolo5s_static.onnx";
+std::string DNN_NET_FILE = "model.onnx";
 std::string CLASSES_FILE = "coco_labels.listfile";
 
 const float YOLO_SIZE = 640.0;
 
-const uint CLASS_COUNT = 80;
-const uint DNN_OUT_ROWS = 25200;
-const float DNN_MIN_CONFIDENCE = 0.8;
+// 25200 for <=v5, 8400 for >=v8, TODO: Extract from .onnx file, CAN BE DONE!
+const uint DNN_OUT_ROWS = 8400;
+const uint CLASS_COUNT = 80;  // output dims are 4 + c, where this is c
+const float DNN_MIN_CONFIDENCE = 0.6;
 
 enum ClassId {
   PERSON = 0,
@@ -121,7 +123,6 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
 }
 
 cv::Mat imageToYoloFrame(cv::Mat frame) {
-  std::println("foobar");
   uint x = frame.cols, y = frame.rows;
   uint max = std::max(x, y);
   float scale = float(YOLO_SIZE) / float(max);
