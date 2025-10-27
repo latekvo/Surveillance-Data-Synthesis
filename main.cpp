@@ -13,7 +13,7 @@ typedef unsigned int uint;
 const int TARGET_FPS = 20;
 
 std::string STREAMS_FILE = "streams.listfile";
-std::string DNN_NET_FILE = "model.onnx";
+const char* DNN_NET_FILE = "model.onnx";
 std::string CLASSES_FILE = "coco_labels.listfile";
 
 const float YOLO_SIZE = 640.0;
@@ -21,7 +21,7 @@ const float YOLO_SIZE = 640.0;
 // 25200 for <=v5, 8400 for >=v8, TODO: Extract from .onnx file, CAN BE DONE!
 const uint DNN_OUT_ROWS = 8400;
 const uint CLASS_COUNT = 80;  // output dims are 4 + c, where this is c
-const float DNN_MIN_CONFIDENCE = 0.6;
+const float DNN_MIN_CONFIDENCE = 0.8;
 
 enum ClassId {
   PERSON = 0,
@@ -38,7 +38,7 @@ struct Detection {
   Rectangle rect;
 };
 
-std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
+std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
                                     std::vector<std::string> classList) {
   if (frame.cols != YOLO_SIZE || frame.rows != YOLO_SIZE) {
     std::println("Invalid Net input dimensions. Check 'runDetection' input.");
@@ -47,18 +47,47 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
 
   cv::Mat blob;
   cv::dnn::blobFromImage(frame, blob, 1. / 255., cv::Size(YOLO_SIZE, YOLO_SIZE),
-                         true, false);
+                         true, false, CV_32F);
 
   if (blob.empty()) {
     std::println("Failed loading net input blob.");
     exit(1);
   }
 
-  net.setInput(blob);
-  std::vector<cv::Mat> outputs;
-  net.forward(outputs, net.getUnconnectedOutLayersNames());
+  // standard input for all YOLOs
+  // TODO: Experiment with variable input side in YOLOv11
+  std::vector<int64_t> inputShape = {1, 3, 640, 640};
+  int64_t inputSize = 3 * 640 * 640;
 
-  cv::Mat output = outputs[0];
+  Ort::MemoryInfo memoryInfo =
+      Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
+
+  Ort::Value tensor = Ort::Value::CreateTensor<float>(
+      memoryInfo, (float*)(blob.data), inputSize, inputShape.data(),
+      inputShape.size());
+
+  // TODO: I think we can do this without `allocator`
+  Ort::AllocatorWithDefaultOptions allocator;
+  const std::string inputName =
+      session.GetInputNameAllocated(0, allocator).get();
+  const std::string outputName =
+      session.GetOutputNameAllocated(0, allocator).get();
+
+  const char* inputNames[] = {inputName.c_str()};
+  const char* outputNames[] = {outputName.c_str()};
+
+  std::vector<Ort::Value> outputs = session.Run(
+      Ort::RunOptions{nullptr}, inputNames, &tensor, 1, outputNames, 1);
+
+  std::vector<int64_t> outputDims =
+      outputs[0].GetTensorTypeAndShapeInfo().GetShape();
+
+  auto output = cv::Mat(cv::Size(static_cast<int>(outputDims[2]),
+                                 static_cast<int>(outputDims[1])),
+                        CV_32F, outputs[0].GetTensorMutableData<float>());
+
+  // TODO: Why do we need to initiate the transposal?
+  cv::Mat boxes = output.t();
 
   if (output.cols == -1 || output.rows == -1) {
     std::println("cv::dnn::Net.forward() failed. Check net input.");
@@ -66,33 +95,31 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
   }
 
   // `data` is a blob, `outputs` contains one such blob. no fragmentation risk
-  float* data = (float*)output.data;
+  float* data = reinterpret_cast<float*>(output.data);
 
   std::vector<Detection> detections;
 
   for (int i = 0; i < DNN_OUT_ROWS; i++) {
     if (i > 0) {
-      data += CLASS_COUNT + 5;
+      data += CLASS_COUNT + 4;
     }
 
     // data is a blob of floats
-    float x = data[0], y = data[1], w = data[2], h = data[3], c = data[4];
+    float x = data[0], y = data[1], w = data[2], h = data[3];
 
-    std::println("{}: c: {},\tx: {},\ty: {},\tw: {},\th: {}", i, c, x, y, w, h);
-
-    // Process only detections with confidence above the threshold
-    if (c < DNN_MIN_CONFIDENCE) {
+    if (w == 0 || h == 0) {
+      // TODO: Confirm that some low-conf are intentionally zeroed
       continue;
     }
 
+    std::println("{}: \tx: {},\ty: {},\tw: {},\th: {}", i, x, y, w, h);
+
     // Get class scores and find the class with the highest score
-    float* classScores = data + 5;
+    float* classScores = data + 4;
     cv::Mat scores(1, classList.size(), CV_32FC1, classScores);
     cv::Point classIdx;
-    double rawBestScore;
-    cv::minMaxLoc(scores, 0, &rawBestScore, 0, &classIdx);
-
-    double bestScore = rawBestScore;
+    double bestScore;
+    cv::minMaxLoc(scores, 0, &bestScore, 0, &classIdx);
 
     if (bestScore < DNN_MIN_CONFIDENCE) {
       continue;
@@ -106,17 +133,13 @@ std::vector<Detection> runDetection(cv::dnn::Net net, cv::Mat frame,
 
     Rectangle rect;
 
-    // rect.x = (xS - 0.5 * wS) * YOLO_WIDTH;
-    // rect.y = (yS - 0.5 * hS) * YOLO_HEIGHT;
-    // Using centerpoints for now for debugging
-    rect.x = x * YOLO_SIZE;
-    rect.y = y * YOLO_SIZE;
+    rect.x = (x - 0.5 * w);
+    rect.y = (y - 0.5 * h);
 
-    // w, h ignored for now for the sake of debugging this
-    rect.width = w * YOLO_SIZE;
-    rect.height = h * YOLO_SIZE;
+    rect.width = w;
+    rect.height = h;
 
-    detections.push_back(Detection(classIdx.x, c, rect));
+    detections.push_back(Detection(classIdx.x, bestScore, rect));
   }
 
   return detections;
@@ -168,9 +191,14 @@ int main() {
   rayImage.mipmaps = 1;
   rayImage.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
 
-  cv::dnn::Net yolo = cv::dnn::readNetFromONNX(DNN_NET_FILE);
-  yolo.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
-  yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+  const Ort::Env oxxnEnv(ORT_LOGGING_LEVEL_WARNING, "TTGL");
+  const Ort::SessionOptions oxxnOptions;
+  Ort::Session onnxSession(oxxnEnv, DNN_NET_FILE, oxxnOptions);
+
+  // cv::dnn::Net yolo = cv::dnn::readNetFromONNX(DNN_NET_FILE);
+  // yolo.setPreferableBackend(cv::dnn::DNN_BACKEND_OPENCV);
+  // yolo.setPreferableTarget(cv::dnn::DNN_TARGET_CPU);
+
   std::vector<std::string> classes = parseListFile(CLASSES_FILE);
 
   while (!WindowShouldClose()) {
@@ -189,7 +217,8 @@ int main() {
 
     // --- DETECTION LOGIC ---
 
-    std::vector<Detection> detections = runDetection(yolo, cvFrame, classes);
+    std::vector<Detection> detections =
+        runDetection(onnxSession, cvFrame, classes);
 
     // --- RENDERING LOGIC ---
 
@@ -212,14 +241,8 @@ int main() {
     for (const Detection& detection : detections) {
       Rectangle rect = detection.rect;
       const auto classname = classes[detection.classIdx].c_str();
-
-      rect.x = float(rect.x);
-      rect.y = float(rect.y);
-      rect.width = float(rect.width);
-      rect.height = float(rect.height);
-
-      // DrawText(classname, rect.x + 2, rect.y - 6, 6, WHITE);
-      // DrawRectangleLinesEx(rect, 2.f, WHITE);
+      DrawText(classname, rect.x + 2, rect.y - 6, 6, WHITE);
+      DrawRectangleLinesEx(rect, 2.f, WHITE);
       DrawRectangle(rect.x, rect.y, 4, 4, GREEN);
     }
 
