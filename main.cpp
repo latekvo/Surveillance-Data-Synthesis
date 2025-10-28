@@ -1,4 +1,4 @@
-#include <onnxruntime/onnxruntime_cxx_api.h>
+#include <onnxruntime_cxx_api.h>
 #include <raylib.h>
 
 #include <opencv2/highgui.hpp>
@@ -19,9 +19,9 @@ std::string CLASSES_FILE = "coco_labels.listfile";
 const float YOLO_SIZE = 640.0;
 
 // 25200 for <=v5, 8400 for >=v8, TODO: Extract from .onnx file, CAN BE DONE!
-const uint DNN_OUT_ROWS = 8400;
+const uint DNN_OUT_ROWS = 300;
 const uint CLASS_COUNT = 80;  // output dims are 4 + c, where this is c
-const float DNN_MIN_CONFIDENCE = 0.8;
+const float DNN_MIN_CONFIDENCE = 0.1;
 
 enum ClassId {
   PERSON = 0,
@@ -101,45 +101,34 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
 
   for (int i = 0; i < DNN_OUT_ROWS; i++) {
     if (i > 0) {
-      data += CLASS_COUNT + 4;
+      data += 6;
     }
 
     // data is a blob of floats
-    float x = data[0], y = data[1], w = data[2], h = data[3];
+    int64_t l = data[0], t = data[1], r = data[2], b = data[3], classId = data[5];
+    float score = data[4];
 
-    if (w == 0 || h == 0) {
-      // TODO: Confirm that some low-conf are intentionally zeroed
-      continue;
-    }
+    std::println("{}: \tl: {},\tr: {},\tt: {},\tb: {},\tu: {},\tv: {}", i, l, r, t, b, score, classId);
 
-    std::println("{}: \tx: {},\ty: {},\tw: {},\th: {}", i, x, y, w, h);
-
-    // Get class scores and find the class with the highest score
-    float* classScores = data + 4;
-    cv::Mat scores(1, classList.size(), CV_32FC1, classScores);
-    cv::Point classIdx;
-    double bestScore;
-    cv::minMaxLoc(scores, 0, &bestScore, 0, &classIdx);
-
-    if (bestScore < DNN_MIN_CONFIDENCE) {
-      continue;
+    if (score < DNN_MIN_CONFIDENCE) {
+      // In YOLOv10 outputs are sorted
+      break;
     }
 
     // TODO: Make a whitelist of entities
-    if (classIdx.x != ClassId::PERSON) {
+    if (classId != ClassId::PERSON) {
       // Allow humans only
       // continue;
     }
 
     Rectangle rect;
 
-    rect.x = (x - 0.5 * w);
-    rect.y = (y - 0.5 * h);
+    rect.width = r - l;
+    rect.height = b - t;
+    rect.x = l;
+    rect.y = t;
 
-    rect.width = w;
-    rect.height = h;
-
-    detections.push_back(Detection(classIdx.x, bestScore, rect));
+    detections.push_back(Detection(classId, score, rect));
   }
 
   return detections;
@@ -207,10 +196,10 @@ int main() {
 
     // Skip buffered frames, this is a bit hacky, but found no better way
     // TODO: Calculate ideal skip-rate on the go
-    uint skippedFrames = 0;
-    while (video.grab() && skippedFrames < 5) {
-      skippedFrames++;
-    }
+    //uint skippedFrames = 0;
+    //while (video.grab() && skippedFrames < 5) {
+    //  skippedFrames++;
+    //}
 
     video.read(rawCvFrame);
     cvFrame = imageToYoloFrame(rawCvFrame);
