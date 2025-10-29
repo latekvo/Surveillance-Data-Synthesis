@@ -47,14 +47,8 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
 
   Ort::Value tensor = toYoloInputTensor(frame);
 
-  Ort::AllocatorWithDefaultOptions allocator;
-  const std::string inputName =
-      session.GetInputNameAllocated(0, allocator).get();
-  const std::string outputName =
-      session.GetOutputNameAllocated(0, allocator).get();
-
-  const char* inputNames[] = {inputName.c_str()};
-  const char* outputNames[] = {outputName.c_str()};
+  const char* inputNames[] = {session.GetInputNames()[0].c_str()};
+  const char* outputNames[] = {session.GetOutputNames()[0].c_str()};
 
   std::vector<Ort::Value> outputs = session.Run(
       Ort::RunOptions{nullptr}, inputNames, &tensor, 1, outputNames, 1);
