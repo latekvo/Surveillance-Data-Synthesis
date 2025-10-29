@@ -7,6 +7,7 @@
 #include <print>
 
 #include "list_parser.h"
+#include "preprocess.h"
 
 typedef unsigned int uint;
 
@@ -40,26 +41,11 @@ struct Detection {
 std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
                                     std::vector<std::string> classList) {
   if (frame.cols != YOLO_SIZE || frame.rows != YOLO_SIZE) {
-    std::println("Invalid Net input dimensions. Check 'runDetection' input.");
+    std::println("Invalid input dimensions. Check 'runDetection' input.");
     exit(1);
   }
 
-  cv::Mat blob;
-  cv::dnn::blobFromImage(frame, blob, 1. / 255., cv::Size(YOLO_SIZE, YOLO_SIZE),
-                         true, false, CV_32F);
-
-  // Standard input for all YOLOs
-  // TODO: Experiment with variable input side in YOLOv11
-  std::vector<int64_t> inputShape = {1, 3, 640, 640};
-  int64_t inputSize =
-      inputShape[0] * inputShape[1] * inputShape[2] * inputShape[3];
-
-  Ort::MemoryInfo memoryInfo =
-      Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
-
-  Ort::Value tensor = Ort::Value::CreateTensor<float>(
-      memoryInfo, (float*)(blob.data), inputSize, inputShape.data(),
-      inputShape.size());
+  Ort::Value tensor = toYoloInputTensor(frame);
 
   Ort::AllocatorWithDefaultOptions allocator;
   const std::string inputName =
@@ -85,7 +71,7 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
       data += 6;
     }
 
-    // data is a blob of floats
+    // `data` is a blob of output values
     int64_t l = data[0], t = data[1], r = data[2], b = data[3],
             classId = data[5];
     float score = data[4];
@@ -115,18 +101,6 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
   }
 
   return detections;
-}
-
-cv::Mat toLetterBox(cv::Mat frame) {
-  uint x = frame.cols, y = frame.rows;
-  uint max = std::max(x, y);
-  float scale = float(YOLO_SIZE) / float(max);
-  uint rX = std::floor(x * scale), rY = std::floor(y * scale);
-  cv::Mat adjusted;
-  cv::resize(frame, adjusted, cv::Size(rX, rY));
-  cv::Mat output = cv::Mat::zeros(YOLO_SIZE, YOLO_SIZE, CV_8UC3);
-  adjusted.copyTo(output(cv::Rect(0, 0, adjusted.cols, adjusted.rows)));
-  return output;
 }
 
 int main() {
@@ -181,7 +155,7 @@ int main() {
     }
 
     video.read(rawCvFrame);
-    cvFrame = toLetterBox(rawCvFrame);
+    cvFrame = toLetterBox(rawCvFrame, YOLO_SIZE);
 
     // --- DETECTION LOGIC ---
 
