@@ -1,7 +1,5 @@
 #include <raylib.h>
 
-#include <opencv2/opencv.hpp>
-#include <opencv2/videoio.hpp>
 #include <print>
 
 #include "detection.h"
@@ -36,7 +34,7 @@ int main() {
   const int screenWidth = YOLO_SIZE;
   const int screenHeight = YOLO_SIZE;
 
-  InitWindow(screenWidth, screenHeight, "debug display");
+  InitWindow(screenWidth, screenHeight, "TTGL");
   SetTargetFPS(TARGET_FPS);
 
   std::vector streams = parseListFile(STREAMS_FILE);
@@ -50,17 +48,13 @@ int main() {
 
   cv::VideoCapture video(streams[0], cv::CAP_FFMPEG);
 
-  // Removes buffer, but this doesn't work with most backends.
-  // If this line does work, it reduces latency by a lot.
-  video.set(cv::CAP_PROP_BUFFERSIZE, 1);
-
   if (!video.isOpened()) {
     std::println("Error - Could not open video!");
     return -1;
   }
 
-  cv::Mat rawCvFrame;
-  cv::Mat cvFrame;
+  cv::Mat videoFrame;
+  cv::Mat detectionFrame;
   Image rayImage;
 
   rayImage.mipmaps = 1;
@@ -83,23 +77,23 @@ int main() {
       skippedFrames++;
     }
 
-    video.read(rawCvFrame);
-    cvFrame = toLetterBox(rawCvFrame, YOLO_SIZE);
+    video.read(videoFrame);
+    detectionFrame = toLetterBox(videoFrame, YOLO_SIZE);
 
     // --- DETECTION LOGIC ---
 
     std::vector<Detection> detections =
-        runDetection(onnxSession, cvFrame, classes);
+        runDetection(onnxSession, detectionFrame, classes);
 
     // --- RENDERING LOGIC ---
 
     // OpenCV and raylib use different pixel formats
-    cv::cvtColor(cvFrame, cvFrame, cv::COLOR_BGR2RGB);
+    cv::cvtColor(detectionFrame, detectionFrame, cv::COLOR_BGR2RGB);
 
     // remap OpenCV to raylib image, no copy, using shared memory
-    rayImage.data = cvFrame.data;
-    rayImage.width = cvFrame.cols;
-    rayImage.height = cvFrame.rows;
+    rayImage.data = detectionFrame.data;
+    rayImage.width = detectionFrame.cols;
+    rayImage.height = detectionFrame.rows;
 
     Texture2D texture = LoadTextureFromImage(rayImage);
     texture.width = screenWidth;
@@ -112,7 +106,7 @@ int main() {
     for (const Detection& detection : detections) {
       Rectangle rect = detection.rect;
       const auto classname = classes[detection.classIdx].c_str();
-      DrawText(classname, rect.x + 2, rect.y - 6, 6, WHITE);
+      DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
     }
 

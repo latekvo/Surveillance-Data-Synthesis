@@ -22,6 +22,7 @@ enum ClassId {
   TRUCK = 7,
 };
 
+// TODO: Should accept arbitrairy input size, then fragment if needed
 std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
                                     std::vector<std::string> classList) {
   if (frame.cols != YOLO_SIZE || frame.rows != YOLO_SIZE) {
