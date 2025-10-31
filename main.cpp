@@ -118,7 +118,7 @@ int main() {
 
     for (DetectionArea& area : areas) {
       std::vector<Detection> results =
-          runDetection(onnxSession, detectionFrame, classes);
+          runDetection(onnxSession, area.frame, classes);
       area.detections.insert(area.detections.end(), results.begin(),
                              results.end());
     }
