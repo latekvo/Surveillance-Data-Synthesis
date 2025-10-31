@@ -3,11 +3,7 @@
 
 #include <opencv2/opencv.hpp>
 
-struct Detection {
-  uint classIdx;
-  float confidence;
-  Rectangle rect;
-};
+#include "types.h"
 
 std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
                                     std::vector<std::string> classList);

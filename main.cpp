@@ -4,39 +4,10 @@
 #include <print>
 #include <vector>
 
+#include "consts.h"
 #include "detection.h"
 #include "list_parser.h"
 #include "preprocess.h"
-
-typedef unsigned int uint;
-
-const int TARGET_FPS = 20;
-
-std::string STREAMS_FILE = "streams.listfile";
-const char* DNN_NET_FILE = "model.onnx";
-std::string CLASSES_FILE = "coco_labels.listfile";
-
-const float YOLO_SIZE = 640.0;
-const float DISPLAY_WIDTH = 900.0;
-
-// 25200 for <=v5, 8400 for >=v8, some .onnx add top-n & softmax (our case)
-const uint DNN_OUT_ROWS = 300;
-const float DNN_MIN_CONFIDENCE = 0.20;
-
-enum ClassId {
-  PERSON = 0,
-  BICYCLE = 1,
-  CAR = 2,
-  MOTORCYCLE = 3,
-  BUS = 5,
-  TRUCK = 7,
-};
-
-struct DetectionArea {
-  cv::Mat frame;
-  cv::Point offset;
-  std::vector<Detection> detections;
-};
 
 std::vector<Detection> mergeDetectionAreas(std::vector<DetectionArea>& areas) {
   std::vector<Detection> merged;
@@ -147,7 +118,7 @@ int main() {
 
     for (DetectionArea& area : areas) {
       std::vector<Detection> results =
-          runDetection(onnxSession, area.frame, classes);
+          runDetection(onnxSession, detectionFrame, classes);
       area.detections.insert(area.detections.end(), results.begin(),
                              results.end());
     }

@@ -6,21 +6,8 @@
 #include <opencv2/opencv.hpp>
 #include <print>
 
+#include "consts.h"
 #include "preprocess.h"
-
-const float YOLO_SIZE = 640.0;
-
-const uint DNN_OUT_ROWS = 300;
-const float DNN_MIN_CONFIDENCE = 0.20;
-
-enum ClassId {
-  PERSON = 0,
-  BICYCLE = 1,
-  CAR = 2,
-  MOTORCYCLE = 3,
-  BUS = 5,
-  TRUCK = 7,
-};
 
 // TODO: Should accept arbitrairy input size, then fragment if needed
 std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
