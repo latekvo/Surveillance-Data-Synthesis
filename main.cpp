@@ -65,8 +65,24 @@ std::vector<DetectionArea> toDetectionAreas(cv::Mat& image) {
       DetectionArea area;
       const uint xOffset = uint(x * YOLO_SIZE);
       const uint yOffset = uint(y * YOLO_SIZE);
+      uint width = YOLO_SIZE;
+      uint height = YOLO_SIZE;
+      uint widthRemainder = image.cols % uint(YOLO_SIZE);
+      uint heightRemainder = image.rows % uint(YOLO_SIZE);
+
+      if (x == xCount - 1 && widthRemainder != 0) {
+        width = widthRemainder;
+      }
+
+      if (y == yCount - 1 && heightRemainder != 0) {
+        height = heightRemainder;
+      }
+
+      cv::Mat cropped = image(cv::Rect(xOffset, yOffset, width, height));
+      cv::Mat letterBox = toLetterBox(cropped, YOLO_SIZE);
+
       area.offset = cv::Point(xOffset, yOffset);
-      area.frame = image(cv::Rect(xOffset, yOffset, YOLO_SIZE, YOLO_SIZE));
+      area.frame = letterBox;
       areas.push_back(area);
     }
   }
