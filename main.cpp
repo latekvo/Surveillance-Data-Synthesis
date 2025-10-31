@@ -1,6 +1,8 @@
 #include <raylib.h>
 
+#include <cmath>
 #include <print>
+#include <vector>
 
 #include "detection.h"
 #include "list_parser.h"
@@ -29,6 +31,48 @@ enum ClassId {
   BUS = 5,
   TRUCK = 7,
 };
+
+struct DetectionArea {
+  cv::Mat frame;
+  cv::Point offset;
+  std::vector<Detection> detections;
+};
+
+std::vector<Detection> mergeDetectionAreas(std::vector<DetectionArea>& areas) {
+  std::vector<Detection> merged;
+
+  for (const DetectionArea& area : areas) {
+    for (Detection detection : area.detections) {
+      detection.rect.x += area.offset.x;
+      detection.rect.y += area.offset.y;
+      merged.push_back(detection);
+    }
+  }
+
+  return merged;
+}
+
+std::vector<DetectionArea> toDetectionAreas(cv::Mat& image) {
+  std::vector<DetectionArea> areas;
+
+  // TODO: Introduce overlap (10-20px?)
+
+  const uint xCount = uint(std::ceil(float(image.cols) / YOLO_SIZE));
+  const uint yCount = uint(std::ceil(float(image.rows) / YOLO_SIZE));
+
+  for (uint y = 0; y < yCount; y++) {
+    for (uint x = 0; x < xCount; x++) {
+      DetectionArea area;
+      const uint xOffset = uint(x * YOLO_SIZE);
+      const uint yOffset = uint(y * YOLO_SIZE);
+      area.offset = cv::Point(xOffset, yOffset);
+      area.frame = image(cv::Rect(xOffset, yOffset, YOLO_SIZE, YOLO_SIZE));
+      areas.push_back(area);
+    }
+  }
+
+  return areas;
+}
 
 int main() {
   const int screenWidth = YOLO_SIZE;
@@ -82,6 +126,8 @@ int main() {
 
     // --- DETECTION LOGIC ---
 
+    std::vector<DetectionArea> areas = toDetectionAreas(videoFrame);
+
     std::vector<Detection> detections =
         runDetection(onnxSession, detectionFrame, classes);
 
@@ -108,6 +154,14 @@ int main() {
       const auto classname = classes[detection.classIdx].c_str();
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
+    }
+
+    for (const DetectionArea& area : areas) {
+      /*
+      DrawRectangleLinesEx(Rectangle{float(area.offset.x), float(area.offset.y),
+                                     YOLO_SIZE, YOLO_SIZE},
+                           2, GREEN);
+      */
     }
 
     EndDrawing();
