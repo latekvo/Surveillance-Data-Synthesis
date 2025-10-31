@@ -1,6 +1,7 @@
 #include <raylib.h>
 
 #include <cmath>
+#include <opencv2/opencv.hpp>
 #include <print>
 #include <vector>
 
@@ -21,6 +22,19 @@ std::vector<Detection> mergeDetectionAreas(std::vector<DetectionArea>& areas) {
   }
 
   return merged;
+}
+
+Rectangle scaleRect(Rectangle rect, float scale) {
+  return Rectangle{
+      rect.x * scale,
+      rect.y * scale,
+      rect.width * scale,
+      rect.height * scale,
+  };
+}
+
+cv::Point scalePoint(cv::Point point, float scale) {
+  return cv::Point(point.x * scale, point.y * scale);
 }
 
 std::vector<DetectionArea> toDetectionAreas(cv::Mat& image) {
@@ -63,10 +77,10 @@ std::vector<DetectionArea> toDetectionAreas(cv::Mat& image) {
 
 int main() {
   // TODO: Make this scalable, variable. For now using video stream dimensions
-  const int screenWidth = 1920;
-  const int screenHeight = 1080;
+  int screenWidthTarget = 1280;
+  int screenHeight = 720;
 
-  InitWindow(screenWidth, screenHeight, "TTGL");
+  InitWindow(screenWidthTarget, screenHeight, "TTGL");
   SetTargetFPS(TARGET_FPS);
 
   std::vector streams = parseListFile(STREAMS_FILE);
@@ -110,7 +124,6 @@ int main() {
     }
 
     video.read(videoFrame);
-    detectionFrame = toLetterBox(videoFrame, YOLO_SIZE);
 
     // --- DETECTION LOGIC ---
 
@@ -126,6 +139,12 @@ int main() {
     std::vector<Detection> detections = mergeDetectionAreas(areas);
 
     // --- RENDERING LOGIC ---
+
+    const float scale = screenWidthTarget / (float)videoFrame.cols;
+    screenHeight = (float)videoFrame.rows * scale;
+
+    cv::resize(videoFrame, videoFrame,
+               cv::Size(screenWidthTarget, screenHeight));
 
     // TODO: Apply this to YOLO input too?
     // OpenCV and raylib use different pixel formats
@@ -143,16 +162,18 @@ int main() {
     DrawTexture(texture, 0, 0, WHITE);
 
     for (const Detection& detection : detections) {
-      Rectangle rect = detection.rect;
+      Rectangle rect = scaleRect(detection.rect, scale);
       const auto classname = classes[detection.classIdx].c_str();
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
     }
 
     for (const DetectionArea& area : areas) {
-      DrawRectangleLinesEx(Rectangle{float(area.offset.x), float(area.offset.y),
-                                     YOLO_SIZE, YOLO_SIZE},
-                           2, GREEN);
+      Rectangle rect =
+          scaleRect(Rectangle{(float)area.offset.x, (float)area.offset.y,
+                              YOLO_SIZE, YOLO_SIZE},
+                    scale);
+      DrawRectangleLinesEx(rect, 1, GREEN);
     }
 
     EndDrawing();
