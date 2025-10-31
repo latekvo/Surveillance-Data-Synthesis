@@ -91,8 +91,9 @@ std::vector<DetectionArea> toDetectionAreas(cv::Mat& image) {
 }
 
 int main() {
-  const int screenWidth = YOLO_SIZE;
-  const int screenHeight = YOLO_SIZE;
+  // TODO: Make this scalable, variable. For now using video stream dimensions
+  const int screenWidth = 1920;
+  const int screenHeight = 1080;
 
   InitWindow(screenWidth, screenHeight, "TTGL");
   SetTargetFPS(TARGET_FPS);
@@ -144,22 +145,27 @@ int main() {
 
     std::vector<DetectionArea> areas = toDetectionAreas(videoFrame);
 
-    std::vector<Detection> detections =
-        runDetection(onnxSession, detectionFrame, classes);
+    for (DetectionArea& area : areas) {
+      std::vector<Detection> results =
+          runDetection(onnxSession, area.frame, classes);
+      area.detections.insert(area.detections.end(), results.begin(),
+                             results.end());
+    }
+
+    std::vector<Detection> detections = mergeDetectionAreas(areas);
 
     // --- RENDERING LOGIC ---
 
+    // TODO: Apply this to YOLO input too?
     // OpenCV and raylib use different pixel formats
-    cv::cvtColor(detectionFrame, detectionFrame, cv::COLOR_BGR2RGB);
+    cv::cvtColor(videoFrame, videoFrame, cv::COLOR_BGR2RGB);
 
     // remap OpenCV to raylib image, no copy, using shared memory
-    rayImage.data = detectionFrame.data;
-    rayImage.width = detectionFrame.cols;
-    rayImage.height = detectionFrame.rows;
+    rayImage.data = videoFrame.data;
+    rayImage.width = videoFrame.cols;
+    rayImage.height = videoFrame.rows;
 
     Texture2D texture = LoadTextureFromImage(rayImage);
-    texture.width = screenWidth;
-    texture.height = screenHeight;
 
     // --- DRAWING CALLS ---
 
@@ -173,11 +179,9 @@ int main() {
     }
 
     for (const DetectionArea& area : areas) {
-      /*
       DrawRectangleLinesEx(Rectangle{float(area.offset.x), float(area.offset.y),
                                      YOLO_SIZE, YOLO_SIZE},
                            2, GREEN);
-      */
     }
 
     EndDrawing();
