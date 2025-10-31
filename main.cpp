@@ -80,6 +80,7 @@ int main() {
   int screenWidthTarget = 1280;
   int screenHeight = 720;
 
+  SetConfigFlags(FLAG_WINDOW_RESIZABLE);
   InitWindow(screenWidthTarget, screenHeight, "TTGL");
   SetTargetFPS(TARGET_FPS);
 
@@ -113,6 +114,7 @@ int main() {
   std::vector<std::string> classes = parseListFile(CLASSES_FILE);
 
   while (!WindowShouldClose()) {
+    screenWidthTarget = GetScreenWidth();
     BeginDrawing();
     ClearBackground(RAYWHITE);
 
@@ -142,6 +144,10 @@ int main() {
 
     const float scale = screenWidthTarget / (float)videoFrame.cols;
     screenHeight = (float)videoFrame.rows * scale;
+
+    if (IsWindowResized()) {
+      SetWindowSize(screenWidthTarget, screenHeight);
+    }
 
     cv::resize(videoFrame, videoFrame,
                cv::Size(screenWidthTarget, screenHeight));
