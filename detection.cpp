@@ -9,13 +9,21 @@
 #include "consts.h"
 #include "preprocess.h"
 
+Rectangle scaleRect2(Rectangle rect, float scale) {
+  return Rectangle{
+      rect.x * scale,
+      rect.y * scale,
+      rect.width * scale,
+      rect.height * scale,
+  };
+}
+
 // TODO: Should accept arbitrairy input size, then fragment if needed
-std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
+// For simplicity, works with arbitriary square inputs for now
+std::vector<Detection> runDetection(Ort::Session& session, cv::Mat input,
                                     std::vector<std::string> classList) {
-  if (frame.cols != YOLO_SIZE || frame.rows != YOLO_SIZE) {
-    std::println("Invalid input dimensions. Check 'runDetection' input.");
-    exit(1);
-  }
+  const float scale = input.cols / YOLO_SIZE;
+  cv::Mat frame = toLetterBox(input, YOLO_SIZE);
 
   Ort::Value tensor = toYoloInputTensor(frame);
 
@@ -45,8 +53,8 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
             classId = data[5];
     float score = data[4];
 
-    std::println("{}: \tl: {},\tr: {},\tt: {},\tb: {},\tu: {},\tv: {}", i, l, r,
-                 t, b, score, classId);
+    std::println("{}: \ts: (x{}:y{})/{}={}, \tu: {},\tv: {}", i, input.cols,
+                 input.rows, YOLO_SIZE, scale, score, classId);
 
     if (score < DNN_MIN_CONFIDENCE) {
       // Our YOLOv10 variant has outputs sorted by TopN
@@ -65,6 +73,8 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat frame,
     rect.height = b - t;
     rect.x = l;
     rect.y = t;
+
+    rect = scaleRect2(rect, scale);
 
     detections.push_back(Detection(classId, score, rect));
   }

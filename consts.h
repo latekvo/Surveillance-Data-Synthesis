@@ -4,18 +4,18 @@
 
 typedef unsigned int uint;
 
-const int TARGET_FPS = 20;
+constexpr int TARGET_FPS = 20;
 
-const float YOLO_SIZE = 640.0;
-const float DISPLAY_WIDTH = 900.0;
+constexpr float YOLO_SIZE = 640.0;
+constexpr float DETECTION_SIZE = 1080;  // downscale, comparable quality
 
 // 25200 for <=v5, 8400 for >=v8, some .onnx add top-n & softmax (our case)
-const uint DNN_OUT_ROWS = 300;
+constexpr const uint DNN_OUT_ROWS = 300;
 const float DNN_MIN_CONFIDENCE = 0.20;
 
 const std::string STREAMS_FILE = "streams.listfile";
 const std::string CLASSES_FILE = "coco_labels.listfile";
-constexpr const char* DNN_NET_FILE = "model.onnx";
+constexpr const char* DNN_NET_FILE = "model_quantized.onnx";
 
 enum ClassId {
   PERSON = 0,
