@@ -34,3 +34,41 @@ Ort::Value toYoloInputTensor(cv::Mat frame) {
 
   return tensor;
 }
+
+std::vector<DetectionArea> toDetectionAreas(cv::Mat& image, float areaSize) {
+  std::vector<DetectionArea> areas;
+
+  // TODO: Introduce overlap (10-20px?)
+
+  const uint xCount = uint(std::ceil(float(image.cols) / areaSize));
+  const uint yCount = uint(std::ceil(float(image.rows) / areaSize));
+
+  for (uint y = 0; y < yCount; y++) {
+    for (uint x = 0; x < xCount; x++) {
+      DetectionArea area;
+      const uint xOffset = uint(x * areaSize);
+      const uint yOffset = uint(y * areaSize);
+      uint width = areaSize;
+      uint height = areaSize;
+      uint widthRemainder = image.cols % uint(areaSize);
+      uint heightRemainder = image.rows % uint(areaSize);
+
+      if (x == xCount - 1 && widthRemainder != 0) {
+        width = widthRemainder;
+      }
+
+      if (y == yCount - 1 && heightRemainder != 0) {
+        height = heightRemainder;
+      }
+
+      cv::Mat cropped = image(cv::Rect(xOffset, yOffset, width, height));
+      cv::Mat letterBox = toLetterBox(cropped, areaSize);
+
+      area.offset = cv::Point(xOffset, yOffset);
+      area.frame = letterBox;
+      areas.push_back(area);
+    }
+  }
+
+  return areas;
+}

@@ -13,7 +13,7 @@
 
 # Models
 /models/
-/model.onnx
+/*.onnx
 
 # CMake
 /.cache/

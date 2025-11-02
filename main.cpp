@@ -1,7 +1,6 @@
 #include <onnxruntime_cxx_api.h>
 #include <raylib.h>
 
-#include <cmath>
 #include <opencv2/opencv.hpp>
 #include <print>
 #include <vector>
@@ -9,92 +8,9 @@
 #include "consts.h"
 #include "detection.h"
 #include "list_parser.h"
+#include "postprocess.h"
 #include "preprocess.h"
-
-std::vector<Detection> mergeDetectionAreas(std::vector<DetectionArea>& areas) {
-  std::vector<Detection> merged;
-
-  for (const DetectionArea& area : areas) {
-    for (Detection detection : area.detections) {
-      detection.rect.x += area.offset.x;
-      detection.rect.y += area.offset.y;
-      merged.push_back(detection);
-    }
-  }
-
-  return merged;
-}
-
-Rectangle scaleRect(Rectangle rect, float scale) {
-  return Rectangle{
-      rect.x * scale,
-      rect.y * scale,
-      rect.width * scale,
-      rect.height * scale,
-  };
-}
-
-cv::Point scalePoint(cv::Point point, float scale) {
-  return cv::Point(point.x * scale, point.y * scale);
-}
-
-std::vector<DetectionArea> toDetectionAreas(cv::Mat& image,
-                                            const float areaSize) {
-  std::vector<DetectionArea> areas;
-
-  // TODO: Introduce overlap (10-20px?)
-
-  const uint xCount = uint(std::ceil(float(image.cols) / areaSize));
-  const uint yCount = uint(std::ceil(float(image.rows) / areaSize));
-
-  for (uint y = 0; y < yCount; y++) {
-    for (uint x = 0; x < xCount; x++) {
-      DetectionArea area;
-      const uint xOffset = uint(x * areaSize);
-      const uint yOffset = uint(y * areaSize);
-      uint width = areaSize;
-      uint height = areaSize;
-      uint widthRemainder = image.cols % uint(areaSize);
-      uint heightRemainder = image.rows % uint(areaSize);
-
-      if (x == xCount - 1 && widthRemainder != 0) {
-        width = widthRemainder;
-      }
-
-      if (y == yCount - 1 && heightRemainder != 0) {
-        height = heightRemainder;
-      }
-
-      cv::Mat cropped = image(cv::Rect(xOffset, yOffset, width, height));
-      cv::Mat letterBox = toLetterBox(cropped, areaSize);
-
-      area.offset = cv::Point(xOffset, yOffset);
-      area.frame = letterBox;
-      areas.push_back(area);
-    }
-  }
-
-  return areas;
-}
-
-template <typename T>
-bool vectorContains(std::vector<T> vec, T element) {
-  return std::find(vec.begin(), vec.end(), element) != vec.end();
-}
-
-std::vector<Detection> toFilteredDetections(
-    std::vector<Detection>& detections, std::vector<uint>& allowedClassIDs) {
-  std::vector<Detection> results;
-
-  // This is very inefficient, but both vecs are too small for this to matter
-  for (const Detection detection : detections) {
-    if (vectorContains(allowedClassIDs, detection.classIdx)) {
-      results.push_back(detection);
-    }
-  }
-
-  return results;
-}
+#include "utils.h"
 
 int main() {
   // TODO: Make this scalable, variable. For now using video stream dimensions
