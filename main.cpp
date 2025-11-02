@@ -1,3 +1,4 @@
+#include <onnxruntime_cxx_api.h>
 #include <raylib.h>
 
 #include <cmath>
@@ -9,12 +10,6 @@
 #include "detection.h"
 #include "list_parser.h"
 #include "preprocess.h"
-
-std::vector<Detection> filterDetections(std::vector<Detection> unfiltered) {
-  std::vector<Detection> filtered;
-
-  return filtered;
-}
 
 std::vector<Detection> mergeDetectionAreas(std::vector<DetectionArea>& areas) {
   std::vector<Detection> merged;
@@ -82,6 +77,25 @@ std::vector<DetectionArea> toDetectionAreas(cv::Mat& image,
   return areas;
 }
 
+template <typename T>
+bool vectorContains(std::vector<T> vec, T element) {
+  return std::find(vec.begin(), vec.end(), element) != vec.end();
+}
+
+std::vector<Detection> toFilteredDetections(
+    std::vector<Detection>& detections, std::vector<uint>& allowedClassIDs) {
+  std::vector<Detection> results;
+
+  // This is very inefficient, but both vecs are too small for this to matter
+  for (const Detection detection : detections) {
+    if (vectorContains(allowedClassIDs, detection.classIdx)) {
+      results.push_back(detection);
+    }
+  }
+
+  return results;
+}
+
 int main() {
   // TODO: Make this scalable, variable. For now using video stream dimensions
   int screenWidthTarget = 1280;
@@ -119,11 +133,11 @@ int main() {
   Ort::Session onnxSession(oxxnEnv, DNN_NET_FILE, oxxnOptions);
 
   std::vector<std::string> classes = parseListFile(CLASSES_FILE);
+  std::vector<uint> allowedClassIDs = {PERSON,     BICYCLE, CAR,
+                                       MOTORCYCLE, BUS,     TRUCK};
 
   while (!WindowShouldClose()) {
     screenWidthTarget = GetScreenWidth();
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
 
     // Skip buffered frames, this is a bit hacky, but found no better way
     // TODO: Calculate ideal skip-rate on the go
@@ -146,7 +160,9 @@ int main() {
                              results.end());
     }
 
-    std::vector<Detection> detections = mergeDetectionAreas(areas);
+    std::vector<Detection> unfilteredDetections = mergeDetectionAreas(areas);
+    std::vector<Detection> detections =
+        toFilteredDetections(unfilteredDetections, allowedClassIDs);
 
     // --- RENDERING LOGIC ---
 
@@ -172,6 +188,8 @@ int main() {
     Texture2D texture = LoadTextureFromImage(rayImage);
 
     // --- DRAWING CALLS ---
+    BeginDrawing();
+    ClearBackground(RAYWHITE);
 
     DrawTexture(texture, 0, 0, WHITE);
 
