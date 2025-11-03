@@ -27,7 +27,7 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat input,
 
   Ort::Value tensor = toYoloInputTensor(frame);
 
-  // Note: Inlining inputName into inputNames crashes
+  // Note: Inlining inputName into inputNames crashes (why????)
   const std::string inputName = session.GetInputNames()[0];
   const std::string outputName = session.GetOutputNames()[0];
   const char* inputNames[] = {inputName.c_str()};
@@ -53,19 +53,13 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat input,
             classId = data[5];
     float score = data[4];
 
-    std::println("{}: \ts: (x{}:y{})/{}={}, \tu: {},\tv: {}", i, input.cols,
-                 input.rows, YOLO_SIZE, scale, score, classId);
-
     if (score < DNN_MIN_CONFIDENCE) {
       // Our YOLOv10 variant has outputs sorted by TopN
       break;
     }
 
-    // TODO: Make a whitelist of entities
-    if (classId != ClassId::PERSON) {
-      // Allow humans only
-      // continue;
-    }
+    std::println("{}: \ts: (x{}:y{})/{}={}, \tu: {},\tv: {}", i, input.cols,
+                 input.rows, YOLO_SIZE, scale, score, classId);
 
     Rectangle rect;
 
