@@ -9,7 +9,7 @@
 /*.webp
 
 # Private configs
-/streams.listfile
+/*.listfile
 
 # Models
 /models/
