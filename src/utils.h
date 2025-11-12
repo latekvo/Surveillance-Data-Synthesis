@@ -7,6 +7,7 @@
 
 Rectangle scaleRect(Rectangle rect, float scale);
 cv::Point scalePoint(cv::Point point, float scale);
+std::vector<std::string> splitString(const std::string& txt, char ch);
 
 template <typename T>
 constexpr bool vectorContains(std::vector<T> vec, T element) {
