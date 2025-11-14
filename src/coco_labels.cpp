@@ -1,18 +1,20 @@
-#include "list_parser.h"
+#include "coco_labels.h"
 
 #include <fstream>
 #include <string>
 #include <vector>
 
-std::vector<std::string> parseListFile(std::string filename) {
+#include "consts.h"
+
+std::vector<std::string> getCocoLabels() {
   std::vector<std::string> out;
   std::string line;
-  std::ifstream file(filename);
+  std::ifstream file(CLASSES_FILE);
 
   if (file.is_open()) {
     while (getline(file, line)) {
       if (line[0] != '#') {
-	out.push_back(line);
+        out.push_back(line);
       }
     }
 

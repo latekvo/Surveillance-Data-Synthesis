@@ -1,0 +1,4 @@
+# camera_ref,stream_url 
+view_0,https://www.example.com/foo/playlist.m3u8
+view_1,https://www.example.com/bar/playlist.m3u8
+view_2,https://www.example.com/baz/playlist.m3u8

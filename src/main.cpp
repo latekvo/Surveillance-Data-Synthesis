@@ -5,9 +5,10 @@
 #include <print>
 #include <vector>
 
+#include "coco_labels.h"
 #include "consts.h"
+#include "csv.h"
 #include "detection.h"
-#include "list_parser.h"
 #include "postprocess.h"
 #include "preprocess.h"
 #include "utils.h"
@@ -21,16 +22,21 @@ int main() {
   InitWindow(screenWidthTarget, screenHeight, "TTGL");
   SetTargetFPS(TARGET_FPS);
 
-  std::vector streams = parseListFile(STREAMS_FILE);
+  std::vector streams = loadCsv(STREAMS_FILE);
 
   if (streams.size() == 0) {
     std::println(
         "Error - No streams provided! Add at least one entry to "
-        "'streams.listfile'.");
+        "'streams.csv'.");
     return -1;
   }
 
-  cv::VideoCapture video(streams[0], cv::CAP_FFMPEG);
+  if (streams[0].size() != 2) {
+    std::println("Error - The streams CSV file is malformed!");
+    return -1;
+  }
+
+  cv::VideoCapture video(streams[0][1], cv::CAP_FFMPEG);
 
   if (!video.isOpened()) {
     std::println("Error - Could not open video!");
@@ -48,7 +54,7 @@ int main() {
   const Ort::SessionOptions oxxnOptions;
   Ort::Session onnxSession(oxxnEnv, DNN_NET_FILE, oxxnOptions);
 
-  std::vector<std::string> classes = parseListFile(CLASSES_FILE);
+  std::vector<std::string> classes = getCocoLabels();
   std::vector<uint> allowedClassIDs = {PERSON,     BICYCLE, CAR,
                                        MOTORCYCLE, BUS,     TRUCK};
 

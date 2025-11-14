@@ -18,6 +18,7 @@ std::vector<std::string> splitString(std::string& str, char sep) {
 }
 
 std::vector<std::vector<std::string>> loadCsv(std::string filename) {
+  std::println("debug:", filename);
   // NOTE: We accept `#` for comments
   std::vector<std::vector<std::string>> out;
   std::string line;

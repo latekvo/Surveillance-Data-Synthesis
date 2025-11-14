@@ -13,9 +13,9 @@ constexpr float DETECTION_SIZE = 1080;  // downscale, comparable quality
 constexpr const uint DNN_OUT_ROWS = 300;
 const float DNN_MIN_CONFIDENCE = 0.20;
 
-const std::string STREAMS_FILE = "streams.listfile";
+const std::string STREAMS_FILE = "streams.csv";
 const std::string CLASSES_FILE = "coco_labels.listfile";
-const std::string OBSERVED_AREAS_FILE = "observed_areas.listfile";
+const std::string OBSERVED_AREAS_FILE = "observed_areas.csv";
 constexpr const char* DNN_NET_FILE = "model_quantized.onnx";
 
 enum ClassId {

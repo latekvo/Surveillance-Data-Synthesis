@@ -48,19 +48,19 @@ cmake_force:
 SHELL = /bin/sh
 
 # The CMake executable.
-CMAKE_COMMAND = /usr/bin/cmake
+CMAKE_COMMAND = /opt/homebrew/bin/cmake
 
 # The command to remove a file.
-RM = /usr/bin/cmake -E rm -f
+RM = /opt/homebrew/bin/cmake -E rm -f
 
 # Escaping for special characters.
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/armado/dev/That-Thing-Government-Loves
+CMAKE_SOURCE_DIR = /Users/ignacylatka/dev/That-Thing-Government-Loves
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/armado/dev/That-Thing-Government-Loves
+CMAKE_BINARY_DIR = /Users/ignacylatka/dev/That-Thing-Government-Loves
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -68,7 +68,7 @@ CMAKE_BINARY_DIR = /home/armado/dev/That-Thing-Government-Loves
 # Special rule for the target edit_cache
 edit_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake cache editor..."
-	/usr/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/ccmake -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : edit_cache
 
 # Special rule for the target edit_cache
@@ -78,7 +78,7 @@ edit_cache/fast: edit_cache
 # Special rule for the target rebuild_cache
 rebuild_cache:
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --cyan "Running CMake to regenerate build system..."
-	/usr/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
+	/opt/homebrew/bin/cmake --regenerate-during-build -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR)
 .PHONY : rebuild_cache
 
 # Special rule for the target rebuild_cache
@@ -87,21 +87,21 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /home/armado/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -E cmake_progress_start /home/armado/dev/That-Thing-Government-Loves/CMakeFiles /home/armado/dev/That-Thing-Government-Loves/src//CMakeFiles/progress.marks
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/armado/dev/That-Thing-Government-Loves/CMakeFiles 0
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -E cmake_progress_start /Users/ignacylatka/dev/That-Thing-Government-Loves/CMakeFiles /Users/ignacylatka/dev/That-Thing-Government-Loves/src//CMakeFiles/progress.marks
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ignacylatka/dev/That-Thing-Government-Loves/CMakeFiles 0
 .PHONY : all
 
 # The main codegen target
 codegen: cmake_check_build_system
-	cd /home/armado/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -E cmake_progress_start /home/armado/dev/That-Thing-Government-Loves/CMakeFiles /home/armado/dev/That-Thing-Government-Loves/src//CMakeFiles/progress.marks
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/codegen
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/armado/dev/That-Thing-Government-Loves/CMakeFiles 0
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -E cmake_progress_start /Users/ignacylatka/dev/That-Thing-Government-Loves/CMakeFiles /Users/ignacylatka/dev/That-Thing-Government-Loves/src//CMakeFiles/progress.marks
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/codegen
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/ignacylatka/dev/That-Thing-Government-Loves/CMakeFiles 0
 .PHONY : codegen
 
 # The main clean target
 clean:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/clean
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/clean
 .PHONY : clean
 
 # The main clean target
@@ -110,22 +110,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 src/CMakeFiles/app.dir/rule:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/app.dir/rule
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/CMakeFiles/app.dir/rule
 .PHONY : src/CMakeFiles/app.dir/rule
 
 # Convenience name for target.
@@ -134,15 +134,63 @@ app: src/CMakeFiles/app.dir/rule
 
 # fast build rule for target.
 app/fast:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/build
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/build
 .PHONY : app/fast
+
+coco_labels.o: coco_labels.cpp.o
+.PHONY : coco_labels.o
+
+# target to build an object file
+coco_labels.cpp.o:
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/coco_labels.cpp.o
+.PHONY : coco_labels.cpp.o
+
+coco_labels.i: coco_labels.cpp.i
+.PHONY : coco_labels.i
+
+# target to preprocess a source file
+coco_labels.cpp.i:
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/coco_labels.cpp.i
+.PHONY : coco_labels.cpp.i
+
+coco_labels.s: coco_labels.cpp.s
+.PHONY : coco_labels.s
+
+# target to generate assembly for a file
+coco_labels.cpp.s:
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/coco_labels.cpp.s
+.PHONY : coco_labels.cpp.s
+
+csv.o: csv.cpp.o
+.PHONY : csv.o
+
+# target to build an object file
+csv.cpp.o:
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/csv.cpp.o
+.PHONY : csv.cpp.o
+
+csv.i: csv.cpp.i
+.PHONY : csv.i
+
+# target to preprocess a source file
+csv.cpp.i:
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/csv.cpp.i
+.PHONY : csv.cpp.i
+
+csv.s: csv.cpp.s
+.PHONY : csv.s
+
+# target to generate assembly for a file
+csv.cpp.s:
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/csv.cpp.s
+.PHONY : csv.cpp.s
 
 detection.o: detection.cpp.o
 .PHONY : detection.o
 
 # target to build an object file
 detection.cpp.o:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/detection.cpp.o
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/detection.cpp.o
 .PHONY : detection.cpp.o
 
 detection.i: detection.cpp.i
@@ -150,7 +198,7 @@ detection.i: detection.cpp.i
 
 # target to preprocess a source file
 detection.cpp.i:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/detection.cpp.i
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/detection.cpp.i
 .PHONY : detection.cpp.i
 
 detection.s: detection.cpp.s
@@ -158,39 +206,15 @@ detection.s: detection.cpp.s
 
 # target to generate assembly for a file
 detection.cpp.s:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/detection.cpp.s
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/detection.cpp.s
 .PHONY : detection.cpp.s
-
-list_parser.o: list_parser.cpp.o
-.PHONY : list_parser.o
-
-# target to build an object file
-list_parser.cpp.o:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/list_parser.cpp.o
-.PHONY : list_parser.cpp.o
-
-list_parser.i: list_parser.cpp.i
-.PHONY : list_parser.i
-
-# target to preprocess a source file
-list_parser.cpp.i:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/list_parser.cpp.i
-.PHONY : list_parser.cpp.i
-
-list_parser.s: list_parser.cpp.s
-.PHONY : list_parser.s
-
-# target to generate assembly for a file
-list_parser.cpp.s:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/list_parser.cpp.s
-.PHONY : list_parser.cpp.s
 
 main.o: main.cpp.o
 .PHONY : main.o
 
 # target to build an object file
 main.cpp.o:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/main.cpp.o
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -198,7 +222,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/main.cpp.i
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -206,7 +230,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/main.cpp.s
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 postprocess.o: postprocess.cpp.o
@@ -214,7 +238,7 @@ postprocess.o: postprocess.cpp.o
 
 # target to build an object file
 postprocess.cpp.o:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/postprocess.cpp.o
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/postprocess.cpp.o
 .PHONY : postprocess.cpp.o
 
 postprocess.i: postprocess.cpp.i
@@ -222,7 +246,7 @@ postprocess.i: postprocess.cpp.i
 
 # target to preprocess a source file
 postprocess.cpp.i:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/postprocess.cpp.i
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/postprocess.cpp.i
 .PHONY : postprocess.cpp.i
 
 postprocess.s: postprocess.cpp.s
@@ -230,7 +254,7 @@ postprocess.s: postprocess.cpp.s
 
 # target to generate assembly for a file
 postprocess.cpp.s:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/postprocess.cpp.s
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/postprocess.cpp.s
 .PHONY : postprocess.cpp.s
 
 preprocess.o: preprocess.cpp.o
@@ -238,7 +262,7 @@ preprocess.o: preprocess.cpp.o
 
 # target to build an object file
 preprocess.cpp.o:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/preprocess.cpp.o
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/preprocess.cpp.o
 .PHONY : preprocess.cpp.o
 
 preprocess.i: preprocess.cpp.i
@@ -246,7 +270,7 @@ preprocess.i: preprocess.cpp.i
 
 # target to preprocess a source file
 preprocess.cpp.i:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/preprocess.cpp.i
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/preprocess.cpp.i
 .PHONY : preprocess.cpp.i
 
 preprocess.s: preprocess.cpp.s
@@ -254,7 +278,7 @@ preprocess.s: preprocess.cpp.s
 
 # target to generate assembly for a file
 preprocess.cpp.s:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/preprocess.cpp.s
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/preprocess.cpp.s
 .PHONY : preprocess.cpp.s
 
 utils.o: utils.cpp.o
@@ -262,7 +286,7 @@ utils.o: utils.cpp.o
 
 # target to build an object file
 utils.cpp.o:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/utils.cpp.o
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/utils.cpp.o
 .PHONY : utils.cpp.o
 
 utils.i: utils.cpp.i
@@ -270,7 +294,7 @@ utils.i: utils.cpp.i
 
 # target to preprocess a source file
 utils.cpp.i:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/utils.cpp.i
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/utils.cpp.i
 .PHONY : utils.cpp.i
 
 utils.s: utils.cpp.s
@@ -278,7 +302,7 @@ utils.s: utils.cpp.s
 
 # target to generate assembly for a file
 utils.cpp.s:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/utils.cpp.s
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/app.dir/build.make src/CMakeFiles/app.dir/utils.cpp.s
 .PHONY : utils.cpp.s
 
 # Help Target
@@ -291,12 +315,15 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... app"
+	@echo "... coco_labels.o"
+	@echo "... coco_labels.i"
+	@echo "... coco_labels.s"
+	@echo "... csv.o"
+	@echo "... csv.i"
+	@echo "... csv.s"
 	@echo "... detection.o"
 	@echo "... detection.i"
 	@echo "... detection.s"
-	@echo "... list_parser.o"
-	@echo "... list_parser.i"
-	@echo "... list_parser.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
@@ -320,6 +347,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /home/armado/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /Users/ignacylatka/dev/That-Thing-Government-Loves && $(CMAKE_COMMAND) -S$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 
