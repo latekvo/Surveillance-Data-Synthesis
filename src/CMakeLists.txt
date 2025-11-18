@@ -10,6 +10,3 @@ add_executable(app main.cpp coco_labels.cpp csv.cpp preprocess.cpp postprocess.c
 
 target_include_directories(app PRIVATE ${raylib_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS})
 target_link_libraries(app PRIVATE onnxruntime::onnxruntime ${raylib_LIBRARIES} ${OpenCV_LIBS})
-
-configure_file(app ../app COPYONLY)
-
