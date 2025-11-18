@@ -1,24 +1,13 @@
 #include "csv.h"
 
 #include <fstream>
-#include <sstream>
 #include <string>
 #include <vector>
 
-std::vector<std::string> splitString(std::string& str, char sep) {
-  std::stringstream ss(str);
-  std::string temp;
-  std::vector<std::string> out;
+#include "utils.h"
 
-  while (getline(ss, temp, sep)) {
-    out.push_back(temp);
-  }
-
-  return out;
-}
-
-std::vector<std::vector<std::string>> loadCsv(std::string filename) {
-  std::println("debug:", filename);
+std::vector<std::vector<std::string>> loadCsv(const std::string& filename) {
+  std::println("Filename:", filename);
   // NOTE: We accept `#` for comments
   std::vector<std::vector<std::string>> out;
   std::string line;
