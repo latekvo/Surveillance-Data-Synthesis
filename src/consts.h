@@ -16,7 +16,7 @@ const float DNN_MIN_CONFIDENCE = 0.20;
 const std::string STREAMS_FILE = "streams.csv";
 const std::string CLASSES_FILE = "coco_labels.listfile";
 const std::string OBSERVED_AREAS_FILE = "observed_areas.csv";
-constexpr const char* DNN_NET_FILE = "model_quantized.onnx";
+constexpr const char* DNN_NET_FILE = "model.onnx";
 
 enum ClassId {
   PERSON = 0,

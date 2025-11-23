@@ -118,19 +118,34 @@ int main() {
 
     DrawTexture(texture, 0, 0, WHITE);
 
-    for (const Detection& detection : detections) {
-      Rectangle rect = scaleRect(detection.rect, scale);
-      const auto classname = classes[detection.classIdx].c_str();
-      DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
-      DrawRectangleLinesEx(rect, 2.f, WHITE);
-    }
-
     for (const DetectionArea& area : areas) {
       Rectangle rect =
           scaleRect(Rectangle{(float)area.offset.x, (float)area.offset.y,
                               areaSize, areaSize},
                     scale);
       DrawRectangleLinesEx(rect, 1, GREEN);
+    }
+
+    for (const CoordMap& coordMap : coordMaps) {
+      if (coordMap.cameraRef != streams[0][0]) {
+        continue;
+      }
+
+      const Point<float>* points = coordMap.cameraTrig.points;
+      Point<float> a = scalePoint(points[0], scale),
+                   b = scalePoint(points[1], scale),
+                   c = scalePoint(points[2], scale);
+
+      const Vector2 vertexes[4] = {
+          {a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {a.x, a.y}};
+      DrawLineStrip(vertexes, 4, GREEN);
+    }
+
+    for (const Detection& detection : detections) {
+      Rectangle rect = scaleRect(detection.rect, scale);
+      const auto classname = classes[detection.classIdx].c_str();
+      DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
+      DrawRectangleLinesEx(rect, 2.f, WHITE);
     }
 
     EndDrawing();

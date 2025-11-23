@@ -10,7 +10,7 @@
 
 // TODO: Rewrite this entire thing into OOP registry (efficient lookup)
 
-Triangle<double> pointsToTrig(std::vector<Point<double>>& points) {
+Triangle<float> pointsToTrig(std::vector<Point<float>>& points) {
   if (points.size() != 3) {
     throw std::runtime_error(
         "Observed areas configuration is invalid. Expected triangle.");
@@ -22,8 +22,8 @@ Triangle<double> pointsToTrig(std::vector<Point<double>>& points) {
 }
 
 void applyPointsToMap(CoordMap* coordMap,
-                      std::vector<Point<double>>& cameraPoints,
-                      std::vector<Point<double>>& realPoints) {
+                      std::vector<Point<float>>& cameraPoints,
+                      std::vector<Point<float>>& realPoints) {
   coordMap->cameraTrig = pointsToTrig(cameraPoints);
   coordMap->realTrig = pointsToTrig(realPoints);
 }
@@ -31,7 +31,7 @@ void applyPointsToMap(CoordMap* coordMap,
 std::vector<CoordMap> loadCoordMaps() {
   std::vector<std::vector<std::string>> rawData = loadCsv(OBSERVED_AREAS_FILE);
   std::vector<CoordMap> coordMaps;
-  std::vector<Point<double>> cameraPointsBuf, realPointsBuf;
+  std::vector<Point<float>> cameraPointsBuf, realPointsBuf;
   CoordMap* currentMapPtr = nullptr;
 
   for (const std::vector<std::string>& row : rawData) {
@@ -45,8 +45,8 @@ std::vector<CoordMap> loadCoordMaps() {
       currentMapPtr = &coordMaps.back();
       currentMapPtr->cameraRef = row[1];
     } else if (type == "vertex") {
-      Point<double> camera = Point(std::stod(row[1]), std::stod(row[2])),
-                    real = Point(std::stod(row[3]), std::stod(row[4]));
+      Point<float> camera = Point(std::stof(row[1]), std::stof(row[2])),
+                   real = Point(std::stof(row[3]), std::stof(row[4]));
 
       cameraPointsBuf.push_back(camera);
       realPointsBuf.push_back(real);

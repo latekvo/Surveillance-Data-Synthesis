@@ -6,8 +6,8 @@
 
 struct CoordMap {
   std::string cameraRef;
-  Triangle<double> cameraTrig;
-  Triangle<double> realTrig;
+  Triangle<float> cameraTrig;
+  Triangle<float> realTrig;
 };
 
 std::vector<CoordMap> loadCoordMaps();

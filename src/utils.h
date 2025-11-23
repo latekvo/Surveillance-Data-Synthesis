@@ -5,9 +5,15 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "types.h"
+
 Rectangle scaleRect(Rectangle rect, float scale);
-cv::Point scalePoint(cv::Point point, float scale);
 std::vector<std::string> splitString(const std::string& txt, char ch);
+
+template <typename T>
+Point<T> scalePoint(Point<T> point, float scale) {
+  return Point(point.x * scale, point.y * scale);
+}
 
 template <typename T>
 constexpr bool vectorContains(std::vector<T> vec, T element) {

@@ -12,10 +12,6 @@ Rectangle scaleRect(Rectangle rect, float scale) {
   };
 }
 
-cv::Point scalePoint(cv::Point point, float scale) {
-  return cv::Point(point.x * scale, point.y * scale);
-}
-
 std::vector<std::string> splitString(const std::string& txt, char ch) {
   size_t pos = txt.find(ch);
   size_t initialPos = 0;
