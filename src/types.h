@@ -15,3 +15,13 @@ struct DetectionArea {
   cv::Point offset;
   std::vector<Detection> detections;
 };
+
+template <typename T>
+struct Point {
+  T x, y;
+};
+
+template <typename T>
+struct Triangle {
+  Point<T> points[3];
+};

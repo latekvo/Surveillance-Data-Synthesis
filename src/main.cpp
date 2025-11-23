@@ -11,6 +11,7 @@
 #include "detection.h"
 #include "postprocess.h"
 #include "preprocess.h"
+#include "remapper.h"
 #include "utils.h"
 
 int main() {
@@ -22,8 +23,10 @@ int main() {
   InitWindow(screenWidthTarget, screenHeight, "TTGL");
   SetTargetFPS(TARGET_FPS);
 
+  std::vector coordMaps = loadCoordMaps();
   std::vector streams = loadCsv(STREAMS_FILE);
 
+  // TODO: Isolate stream loading to separate file
   if (streams.size() == 0) {
     std::println(
         "Error - No streams provided! Add at least one entry to "

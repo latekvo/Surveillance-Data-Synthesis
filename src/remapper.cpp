@@ -1,44 +1,63 @@
-#include <opencv2/opencv.hpp>
+#include "remapper.h"
+
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "consts.h"
-#include "list_parser.h"
-// 1. load coord maps
-// 2. process coordinates
+#include "csv.h"
+#include "types.h"
 
-struct CoordMapTrig {
-  uint x1, y1, x2, y2, x3, y3;  // camera coords
-  uint p1, q1, p2, q2, p3, q3;  // real coords
-};
+// TODO: Rewrite this entire thing into OOP registry (efficient lookup)
 
-struct CoordMap {
-  std::string cameraRef;  // TODO: Make this the key, instead of a trivial label
-  CoordMapTrig cameraTrig;  // FIXME: using just one for testing
-  // std::vector<CoordMapTrig> cameraTrigs;
-  CoordMapTrig realTrig;
-  // std::vector<CoordMapTrig> realTrigs;
-};
+Triangle<double> pointsToTrig(std::vector<Point<double>>& points) {
+  if (points.size() != 3) {
+    throw std::runtime_error(
+        "Observed areas configuration is invalid. Expected triangle.");
+  }
 
-// TODO: Rewrite this entire thing into OOP registry
+  return {{{points[0].x, points[0].y},
+           {points[1].x, points[1].y},
+           {points[2].x, points[2].y}}};
+}
 
-// I don't think we actually care about whether the point inside.
-// The perspective transform should work regardless.
-bool isWithinTrig(cv::Point point) { return true; }
-bool isWithinMap(cv::Point point) { return true; }
+void applyPointsToMap(CoordMap* coordMap,
+                      std::vector<Point<double>>& cameraPoints,
+                      std::vector<Point<double>>& realPoints) {
+  coordMap->cameraTrig = pointsToTrig(cameraPoints);
+  coordMap->realTrig = pointsToTrig(realPoints);
+}
 
 std::vector<CoordMap> loadCoordMaps() {
-  std::vector<std::string> rawData = parseListFile(OBSERVED_AREAS_FILE);
-  std::string cameraRef = rawData[0];
-  std::string v1Data = rawData[1], v2Data = rawData[2], v3Data = rawData[3];
+  std::vector<std::vector<std::string>> rawData = loadCsv(OBSERVED_AREAS_FILE);
+  std::vector<CoordMap> coordMaps;
+  std::vector<Point<double>> cameraPointsBuf, realPointsBuf;
+  CoordMap* currentMapPtr = nullptr;
 
-  std::vector<cv::Point> cameraVertexes, realVertexes;
+  for (const std::vector<std::string>& row : rawData) {
+    const std::string& type = row[0];
+    if (type == "ref") {
+      if (currentMapPtr) {
+        applyPointsToMap(currentMapPtr, cameraPointsBuf, realPointsBuf);
+      }
 
-  // TODO: handle multiple entries
+      coordMaps.push_back({row[1]});
+      currentMapPtr = &coordMaps.back();
+      currentMapPtr->cameraRef = row[1];
+    } else if (type == "vertex") {
+      Point<double> camera = Point(std::stod(row[1]), std::stod(row[2])),
+                    real = Point(std::stod(row[3]), std::stod(row[4]));
 
-  auto coordMap = CoordMap();
+      cameraPointsBuf.push_back(camera);
+      realPointsBuf.push_back(real);
+    }
+  }
 
-  return {coordMap};
+  if (currentMapPtr) {
+    applyPointsToMap(currentMapPtr, cameraPointsBuf, realPointsBuf);
+  }
+
+  return coordMaps;
 }
 cv::Point mapPointToCoords(cv::Point point, std::string cameraRef) {
   return {};
