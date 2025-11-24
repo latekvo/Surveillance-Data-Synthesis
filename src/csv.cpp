@@ -8,7 +8,7 @@
 #include "utils.h"
 
 std::vector<std::vector<std::string>> loadCsv(const std::string& filename) {
-  std::println("Filename:", filename);
+  std::println("Reading file: {}", filename);
   // NOTE: We accept `#` for comments
   std::vector<std::vector<std::string>> out;
   std::string line;
@@ -16,7 +16,7 @@ std::vector<std::vector<std::string>> loadCsv(const std::string& filename) {
 
   if (file.is_open()) {
     while (getline(file, line)) {
-      if (line[0] != '#') {
+      if (line[0] != '#' && !line.empty()) {
         out.push_back(splitString(line, ','));
       }
     }

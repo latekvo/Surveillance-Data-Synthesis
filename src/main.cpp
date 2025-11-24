@@ -7,15 +7,14 @@
 
 #include "coco_labels.h"
 #include "consts.h"
-#include "csv.h"
 #include "detection.h"
 #include "postprocess.h"
 #include "preprocess.h"
 #include "remapper.h"
+#include "streams.h"
 #include "utils.h"
 
 int main() {
-  // TODO: Make this scalable, variable. For now using video stream dimensions
   int screenWidthTarget = 1280;
   int screenHeight = 720;
 
@@ -24,22 +23,9 @@ int main() {
   SetTargetFPS(TARGET_FPS);
 
   std::vector coordMaps = loadCoordMaps();
-  std::vector streams = loadCsv(STREAMS_FILE);
+  std::vector streams = loadStreams();
 
-  // TODO: Isolate stream loading to separate file
-  if (streams.size() == 0) {
-    std::println(
-        "Error - No streams provided! Add at least one entry to "
-        "'streams.csv'.");
-    return -1;
-  }
-
-  if (streams[0].size() != 2) {
-    std::println("Error - The streams CSV file is malformed!");
-    return -1;
-  }
-
-  cv::VideoCapture video(streams[0][1], cv::CAP_FFMPEG);
+  cv::VideoCapture video(streams[0].url, cv::CAP_FFMPEG);
 
   if (!video.isOpened()) {
     std::println("Error - Could not open video!");
@@ -127,7 +113,7 @@ int main() {
     }
 
     for (const CoordMap& coordMap : coordMaps) {
-      if (coordMap.cameraRef != streams[0][0]) {
+      if (coordMap.cameraRef != streams[0].name) {
         continue;
       }
 
