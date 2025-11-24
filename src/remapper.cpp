@@ -1,5 +1,6 @@
 #include "remapper.h"
 
+#include <format>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -13,7 +14,9 @@
 Triangle<float> pointsToTrig(std::vector<Point<float>>& points) {
   if (points.size() != 3) {
     throw std::runtime_error(
-        "Observed areas configuration is invalid. Expected triangle.");
+        std::format("Observed areas configuration is invalid. "
+                    "Expected triangle. Got {}-angle.",
+                    points.size()));
   }
 
   return {{{points[0].x, points[0].y},
@@ -39,6 +42,8 @@ std::vector<CoordMap> loadCoordMaps() {
     if (type == "ref") {
       if (currentMapPtr) {
         applyPointsToMap(currentMapPtr, cameraPointsBuf, realPointsBuf);
+        cameraPointsBuf.clear();
+        realPointsBuf.clear();
       }
 
       coordMaps.push_back({row[1]});
