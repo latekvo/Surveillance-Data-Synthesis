@@ -13,26 +13,12 @@ struct CoordMap {
 std::vector<CoordMap> loadCoordMaps();
 
 template <typename T>
-Point<T> toBarycentric(Point<T> point, const Triangle<T>& trig) {
-  // "Affinite transformation of the point"
-  // We are aligning the triangle to cartesian 0 point, x and y axis,
-  // and moving the point along the way
+Point<T> toBarycentric(Point<T> p, const Triangle<T>& trig) {
   Point<T> a = trig.points[0], b = trig.points[1], c = trig.points[2];
-
-  T xRatio = point.y / (c.y - b.y);
-  T xVec = a.x - c.x;
-  point.x += xVec * xRatio;
-
-  T yRatio = point.x / (b.x - c.x);
-  T yVec = a.y - b.y;
-  point.y += yVec * yRatio;
-
-  // Now we have a right triangle, next adjusting it's size
-
-  point.x /= b.x - a.x;
-  point.y /= c.y - a.y;
-
-  return point;
+  T denom = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
+  p.x = ((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y)) / denom;
+  p.y = ((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / denom;
+  return p;
 }
 
 template <typename T>
