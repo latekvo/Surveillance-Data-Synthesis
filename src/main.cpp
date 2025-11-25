@@ -138,10 +138,6 @@ int main() {
     Point baC = toBarycentric(mapPoints[2], coordMap.cameraTrig) * baryScale +
                 baryScale;
 
-    std::println("BAR a: x: {} y: {}", baA.x, baA.y);
-    std::println("BAR b: x: {} y: {}", baB.x, baB.y);
-    std::println("BAR c: x: {} y: {}", baC.x, baC.y);
-
     const Vector2 baVertexes[4] = {
         {baA.x, baA.y}, {baB.x, baB.y}, {baC.x, baC.y}, {baA.x, baA.y}};
     DrawLineStrip(baVertexes, 4, WHITE);
@@ -153,14 +149,13 @@ int main() {
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
 
+      Point<float> feet = Point{rect.x + rect.width / 2, rect.y + rect.height};
+
       // debug barycentric:
-      Point barycentric = toBarycentric(Point{(float)rect.x, (float)rect.y},
-                                        coordMap.cameraTrig) *
-                              baryScale +
-                          baryScale;
+      Point barycentric =
+          toBarycentric(feet, coordMap.cameraTrig) * baryScale + baryScale;
 
-      std::println("BAR: x: {} y: {}", barycentric.x, barycentric.y);
-
+      DrawRectangleLinesEx({feet.x, feet.y, 4, 4}, 3.f, PINK);
       DrawRectangleLinesEx({barycentric.x, barycentric.y, 4, 4}, 3.f, PINK);
     }
 
