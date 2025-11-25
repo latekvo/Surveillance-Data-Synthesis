@@ -129,17 +129,39 @@ int main() {
         {a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {a.x, a.y}};
     DrawLineStrip(vertexes, 4, GREEN);
 
+    float baryScale = 100;
+
+    Point baA = toBarycentric(mapPoints[0], coordMap.cameraTrig) * baryScale +
+                baryScale;
+    Point baB = toBarycentric(mapPoints[1], coordMap.cameraTrig) * baryScale +
+                baryScale;
+    Point baC = toBarycentric(mapPoints[2], coordMap.cameraTrig) * baryScale +
+                baryScale;
+
+    std::println("BAR a: x: {} y: {}", baA.x, baA.y);
+    std::println("BAR b: x: {} y: {}", baB.x, baB.y);
+    std::println("BAR c: x: {} y: {}", baC.x, baC.y);
+
+    const Vector2 baVertexes[4] = {
+        {baA.x, baA.y}, {baB.x, baB.y}, {baC.x, baC.y}, {baA.x, baA.y}};
+    DrawLineStrip(baVertexes, 4, WHITE);
+
     for (const Detection& detection : detections) {
       Rectangle rect = scaleRect(detection.rect, scale);
 
-      Point barycentric =
-          remapPoint(Point{(float)rect.x, (float)rect.y}, coordMap);
-
-      std::println("BAR: x: {} y: {}", barycentric.x, barycentric.y);
       const auto classname = classes[detection.classIdx].c_str();
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
-      DrawRectangleLinesEx({barycentric.x, barycentric.y, 1, 1}, 3.f, PINK);
+
+      // debug barycentric:
+      Point barycentric = toBarycentric(Point{(float)rect.x, (float)rect.y},
+                                        coordMap.cameraTrig) *
+                              baryScale +
+                          baryScale;
+
+      std::println("BAR: x: {} y: {}", barycentric.x, barycentric.y);
+
+      DrawRectangleLinesEx({barycentric.x, barycentric.y, 4, 4}, 3.f, PINK);
     }
 
     DrawText("A", a.x, a.y, 16, PINK);
