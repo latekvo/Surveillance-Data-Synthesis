@@ -30,17 +30,16 @@ AS::Point<T> toBarycentric(AS::Point<T> p, const AS::Triangle<T>& t) {
 }
 
 template <typename T>
-AS::Point<T> fromBarycentric(AS::Point<T> p, const AS::Triangle<T>& trig) {
+AS::Point<T> fromBarycentric(const AS::Point<T>& p,
+                             const AS::Triangle<T>& trig) {
   T z = 1 - p.x - p.y;
-  p.x = trig.a.x * p.x + trig.b.x * p.y + trig.c.x * z;
-  p.y = trig.a.y * p.x + trig.b.y * p.y + trig.c.y * z;
-  return p;
+  return AS::Point{trig.a.x * p.x + trig.b.x * p.y + trig.c.x * z,
+                   trig.a.y * p.x + trig.b.y * p.y + trig.c.y * z};
 }
 
 template <typename T>
-AS::Point<T> remapPoint(AS::Point<T> point, const CoordMap& coordMap) {
-  point = toBarycentric(point, coordMap.cameraTrig);
-  point = fromBarycentric(point, coordMap.realTrig);
-  return point;
+AS::Point<T> remapPoint(const AS::Point<T>& point, const CoordMap& coordMap) {
+  AS::Point bPoint = fromBarycentric(point, coordMap.realTrig);
+  return toBarycentric(bPoint, coordMap.cameraTrig);
 }
 
