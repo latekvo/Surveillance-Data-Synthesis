@@ -27,7 +27,7 @@ Point<T> toBarycentric(Point<T> point, const Triangle<T>& trig) {
   T xRatioP = point.y / vecB.y;
   T xRatioC = vecC.y / vecB.y;
   vecC.x += vecC.x * xRatioC;  // 99% sure this is unnecessary
-  point.x += point.x * xRatioC;
+  point.x += point.x * xRatioP;
 
   // vecC is new X axis, below is a skew to align vecC to X
   T yRatioP = point.x / vecC.x;
@@ -35,7 +35,7 @@ Point<T> toBarycentric(Point<T> point, const Triangle<T>& trig) {
   vecB.y += vecB.y * yRatioB;  // 99% sure this is unnecessary
   point.y += point.y * yRatioP;
 
-  // Scale all such that both vecB & vecC are unitary
+  // Scale such that both vecB & vecC are unitary
   point.x /= vecC.x;
   point.y /= vecB.y;
 
