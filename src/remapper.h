@@ -17,27 +17,20 @@ Point<T> toBarycentric(Point<T> point, const Triangle<T>& trig) {
   // "Affinite transformation of the point"
   // We are aligning the triangle to cartesian 0 point, x and y axis,
   // and moving the point along the way
-  Point<T> A = trig.points[0], B = trig.points[1], C = trig.points[2];
-  Point<T> vecB = B - A;
-  Point<T> vecC = C - A;
+  Point<T> a = trig.points[0], b = trig.points[1], c = trig.points[2];
 
-  // TODO: I'm sure these skews & other ops can be optimized
+  T xRatio = point.y / (c.y - b.y);
+  T xVec = a.x - c.x;
+  point.x += xVec * xRatio;
 
-  // vecB is new Y axis, below is a skew to align vecB to Y
-  T xRatioP = point.y / vecB.y;
-  T xRatioC = vecC.y / vecB.y;
-  vecC.x += vecC.x * xRatioC;  // 99% sure this is unnecessary
-  point.x += point.x * xRatioP;
+  T yRatio = point.x / (b.x - c.x);
+  T yVec = a.y - b.y;
+  point.y += yVec * yRatio;
 
-  // vecC is new X axis, below is a skew to align vecC to X
-  T yRatioP = point.x / vecC.x;
-  T yRatioB = vecB.x / vecC.x;
-  vecB.y += vecB.y * yRatioB;  // 99% sure this is unnecessary
-  point.y += point.y * yRatioP;
+  // Now we have a right triangle, next adjusting it's size
 
-  // Scale such that both vecB & vecC are unitary
-  point.x /= vecC.x;
-  point.y /= vecB.y;
+  point.x /= b.x - a.x;
+  point.y /= c.y - a.y;
 
   return point;
 }
