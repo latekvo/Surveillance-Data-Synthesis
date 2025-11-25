@@ -13,8 +13,8 @@ struct CoordMap {
 std::vector<CoordMap> loadCoordMaps();
 
 template <typename T>
-Point<T> toBarycentric(Point<T> p, const Triangle<T>& trig) {
-  Point<T> a = trig.points[0], b = trig.points[1], c = trig.points[2];
+AS::Point<T> toBarycentric(AS::Point<T> p, const Triangle<T>& trig) {
+  AS::Point<T> a = trig.points[0], b = trig.points[1], c = trig.points[2];
   T v0x = b.x - a.x, v0y = b.y - a.y;
   T v1x = c.x - a.x, v1y = c.y - a.y;
   T v2x = p.x - a.x, v2y = p.y - a.y;
@@ -30,13 +30,13 @@ Point<T> toBarycentric(Point<T> p, const Triangle<T>& trig) {
 }
 
 template <typename T>
-Point<T> fromBarycentric(Point<T> point, const Triangle<T>& trig) {
+AS::Point<T> fromBarycentric(AS::Point<T> point, const Triangle<T>& trig) {
   // Exact reverse of toBarycentric
   return point;
 }
 
 template <typename T>
-Point<T> remapPoint(Point<T> point, const CoordMap& coordMap) {
+AS::Point<T> remapPoint(AS::Point<T> point, const CoordMap& coordMap) {
   point = toBarycentric(point, coordMap.cameraTrig);
   point = fromBarycentric(point, coordMap.realTrig);
   return point;

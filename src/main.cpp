@@ -120,10 +120,10 @@ int main() {
       DrawRectangleLinesEx(rect, 1, GREEN);
     }
 
-    const Point<float>* mapPoints = coordMap.cameraTrig.points;
-    Point<float> a = scalePoint(mapPoints[0], scale),
-                 b = scalePoint(mapPoints[1], scale),
-                 c = scalePoint(mapPoints[2], scale);
+    const AS::Point<float>* mapPoints = coordMap.cameraTrig.points;
+    AS::Point<float> a = scalePoint(mapPoints[0], scale),
+                     b = scalePoint(mapPoints[1], scale),
+                     c = scalePoint(mapPoints[2], scale);
 
     const Vector2 vertexes[4] = {
         {a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {a.x, a.y}};
@@ -131,12 +131,15 @@ int main() {
 
     float baryScale = 100;
 
-    Point baA = toBarycentric(mapPoints[0], coordMap.cameraTrig) * baryScale +
-                baryScale;
-    Point baB = toBarycentric(mapPoints[1], coordMap.cameraTrig) * baryScale +
-                baryScale;
-    Point baC = toBarycentric(mapPoints[2], coordMap.cameraTrig) * baryScale +
-                baryScale;
+    AS::Point baA =
+        toBarycentric(mapPoints[0], coordMap.cameraTrig) * baryScale +
+        baryScale;
+    AS::Point baB =
+        toBarycentric(mapPoints[1], coordMap.cameraTrig) * baryScale +
+        baryScale;
+    AS::Point baC =
+        toBarycentric(mapPoints[2], coordMap.cameraTrig) * baryScale +
+        baryScale;
 
     const Vector2 baVertexes[4] = {
         {baA.x, baA.y}, {baB.x, baB.y}, {baC.x, baC.y}, {baA.x, baA.y}};
@@ -150,14 +153,14 @@ int main() {
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
 
-      Point<float> feet =
-          Point{rawRect.x + rawRect.width / 2, rawRect.y + rawRect.height};
+      AS::Point<float> feet =
+          AS::Point{rawRect.x + rawRect.width / 2, rawRect.y + rawRect.height};
 
       // debug barycentric:
-      Point barycentric =
+      AS::Point barycentric =
           toBarycentric(feet, coordMap.cameraTrig) * baryScale + baryScale;
 
-      Point feetScaled = scalePoint(feet, scale);
+      AS::Point feetScaled = scalePoint(feet, scale);
       DrawRectangleLinesEx({feetScaled.x, feetScaled.y, 4, 4}, 3.f, PINK);
       DrawRectangleLinesEx({barycentric.x, barycentric.y, 4, 4}, 3.f, PINK);
     }

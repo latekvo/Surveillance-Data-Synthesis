@@ -5,14 +5,14 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "types.h"
+#include "types/point.hpp"
 
 Rectangle scaleRect(Rectangle rect, float scale);
 std::vector<std::string> splitString(const std::string& txt, char ch);
 
 template <typename T>
-Point<T> scalePoint(Point<T> point, float scale) {
-  return Point(point.x * scale, point.y * scale);
+AS::Point<T> scalePoint(AS::Point<T> point, float scale) {
+  return AS::Point(point.x * scale, point.y * scale);
 }
 
 template <typename T>

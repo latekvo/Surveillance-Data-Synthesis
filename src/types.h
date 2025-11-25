@@ -4,6 +4,8 @@
 
 #include <opencv2/opencv.hpp>
 
+#include "types/point.hpp"
+
 struct Detection {
   uint classIdx;
   float confidence;
@@ -17,31 +19,6 @@ struct DetectionArea {
 };
 
 template <typename T>
-struct Point {
-  T x, y;
-};
-
-template <typename T>
-Point<T> operator+(const Point<T>& lhs, const T& rhs) {
-  return Point<T>{lhs.x + rhs, lhs.y + rhs};
-}
-
-template <typename T>
-Point<T> operator*(const Point<T>& lhs, const T& rhs) {
-  return Point<T>{lhs.x * rhs, lhs.y * rhs};
-}
-
-template <typename T>
-Point<T> operator+(const Point<T>& lhs, const Point<T>& rhs) {
-  return Point<T>{lhs.x + rhs.x, lhs.y + rhs.y};
-}
-
-template <typename T>
-Point<T> operator-(const Point<T>& lhs, const Point<T>& rhs) {
-  return Point<T>{lhs.x - rhs.x, lhs.y - rhs.y};
-}
-
-template <typename T>
 struct Triangle {
-  Point<T> points[3];
+  AS::Point<T> points[3];
 };

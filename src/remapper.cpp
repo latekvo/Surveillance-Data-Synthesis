@@ -8,10 +8,11 @@
 #include "consts.h"
 #include "csv.h"
 #include "types.h"
+#include "types/point.hpp"
 
 // TODO: Rewrite this entire thing into OOP registry (efficient lookup)
 
-Triangle<float> pointsToTrig(std::vector<Point<float>>& points) {
+Triangle<float> pointsToTrig(std::vector<AS::Point<float>>& points) {
   if (points.size() != 3) {
     throw std::runtime_error(
         std::format("Observed areas configuration is invalid. "
@@ -25,8 +26,8 @@ Triangle<float> pointsToTrig(std::vector<Point<float>>& points) {
 }
 
 void applyPointsToMap(CoordMap* coordMap,
-                      std::vector<Point<float>>& cameraPoints,
-                      std::vector<Point<float>>& realPoints) {
+                      std::vector<AS::Point<float>>& cameraPoints,
+                      std::vector<AS::Point<float>>& realPoints) {
   coordMap->cameraTrig = pointsToTrig(cameraPoints);
   coordMap->realTrig = pointsToTrig(realPoints);
 }
@@ -34,7 +35,7 @@ void applyPointsToMap(CoordMap* coordMap,
 std::vector<CoordMap> loadCoordMaps() {
   std::vector<std::vector<std::string>> rawData = loadCsv(OBSERVED_AREAS_FILE);
   std::vector<CoordMap> coordMaps;
-  std::vector<Point<float>> cameraPointsBuf, realPointsBuf;
+  std::vector<AS::Point<float>> cameraPointsBuf, realPointsBuf;
   CoordMap* currentMapPtr = nullptr;
 
   for (const std::vector<std::string>& row : rawData) {
@@ -50,8 +51,8 @@ std::vector<CoordMap> loadCoordMaps() {
       currentMapPtr = &coordMaps.back();
       currentMapPtr->cameraRef = row[1];
     } else if (type == "vertex") {
-      Point<float> camera = Point(std::stof(row[1]), std::stof(row[2])),
-                   real = Point(std::stof(row[3]), std::stof(row[4]));
+      AS::Point<float> camera = AS::Point(std::stof(row[1]), std::stof(row[2])),
+                       real = AS::Point(std::stof(row[3]), std::stof(row[4]));
 
       cameraPointsBuf.push_back(camera);
       realPointsBuf.push_back(real);
