@@ -64,6 +64,3 @@ std::vector<CoordMap> loadCoordMaps() {
 
   return coordMaps;
 }
-cv::Point mapPointToCoords(cv::Point point, std::string cameraRef) {
-  return {};
-}

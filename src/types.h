@@ -22,6 +22,16 @@ struct Point {
 };
 
 template <typename T>
+Point<T> operator+(const Point<T>& lhs, const Point<T>& rhs) {
+  return Point<T>{lhs.x + rhs.x, lhs.y + rhs.y};
+}
+
+template <typename T>
+Point<T> operator-(const Point<T>& lhs, const Point<T>& rhs) {
+  return Point<T>{lhs.x - rhs.x, lhs.y - rhs.y};
+}
+
+template <typename T>
 struct Triangle {
   Point<T> points[3];
 };
