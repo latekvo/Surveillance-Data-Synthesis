@@ -1,23 +1,23 @@
 #pragma once
 
+#include <string>
 #include <vector>
 
-#include "types.h"
+#include "types/triangle.hpp"
 
 struct CoordMap {
   std::string cameraRef;
-  Triangle<float> cameraTrig;
-  Triangle<float> realTrig;
+  AS::Triangle<float> cameraTrig;
+  AS::Triangle<float> realTrig;
 };
 
 std::vector<CoordMap> loadCoordMaps();
 
 template <typename T>
-AS::Point<T> toBarycentric(AS::Point<T> p, const Triangle<T>& trig) {
-  AS::Point<T> a = trig.points[0], b = trig.points[1], c = trig.points[2];
-  T v0x = b.x - a.x, v0y = b.y - a.y;
-  T v1x = c.x - a.x, v1y = c.y - a.y;
-  T v2x = p.x - a.x, v2y = p.y - a.y;
+AS::Point<T> toBarycentric(AS::Point<T> p, const AS::Triangle<T>& t) {
+  T v0x = t.b.x - t.a.x, v0y = t.b.y - t.a.y;
+  T v1x = t.c.x - t.a.x, v1y = t.c.y - t.a.y;
+  T v2x = p.x - t.a.x, v2y = p.y - t.a.y;
   T d00 = v0x * v0x + v0y * v0y;
   T d01 = v0x * v1x + v0y * v1y;
   T d11 = v1x * v1x + v1y * v1y;
@@ -30,7 +30,7 @@ AS::Point<T> toBarycentric(AS::Point<T> p, const Triangle<T>& trig) {
 }
 
 template <typename T>
-AS::Point<T> fromBarycentric(AS::Point<T> point, const Triangle<T>& trig) {
+AS::Point<T> fromBarycentric(AS::Point<T> point, const AS::Triangle<T>& trig) {
   // Exact reverse of toBarycentric
   return point;
 }

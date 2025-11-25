@@ -7,12 +7,12 @@
 
 #include "consts.h"
 #include "csv.h"
-#include "types.h"
 #include "types/point.hpp"
+#include "types/triangle.hpp"
 
 // TODO: Rewrite this entire thing into OOP registry (efficient lookup)
 
-Triangle<float> pointsToTrig(std::vector<AS::Point<float>>& points) {
+AS::Triangle<float> pointsToTrig(std::vector<AS::Point<float>>& points) {
   if (points.size() != 3) {
     throw std::runtime_error(
         std::format("Observed areas configuration is invalid. "
@@ -20,9 +20,7 @@ Triangle<float> pointsToTrig(std::vector<AS::Point<float>>& points) {
                     points.size()));
   }
 
-  return {{{points[0].x, points[0].y},
-           {points[1].x, points[1].y},
-           {points[2].x, points[2].y}}};
+  return AS::Triangle<float>{points[0], points[1], points[2]};
 }
 
 void applyPointsToMap(CoordMap* coordMap,
