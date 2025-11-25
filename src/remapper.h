@@ -15,9 +15,17 @@ std::vector<CoordMap> loadCoordMaps();
 template <typename T>
 Point<T> toBarycentric(Point<T> p, const Triangle<T>& trig) {
   Point<T> a = trig.points[0], b = trig.points[1], c = trig.points[2];
-  T denom = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y);
-  p.x = ((b.y - c.y) * (p.x - c.x) + (c.x - b.x) * (p.y - c.y)) / denom;
-  p.y = ((c.y - a.y) * (p.x - c.x) + (a.x - c.x) * (p.y - c.y)) / denom;
+  T v0x = b.x - a.x, v0y = b.y - a.y;
+  T v1x = c.x - a.x, v1y = c.y - a.y;
+  T v2x = p.x - a.x, v2y = p.y - a.y;
+  T d00 = v0x * v0x + v0y * v0y;
+  T d01 = v0x * v1x + v0y * v1y;
+  T d11 = v1x * v1x + v1y * v1y;
+  T d20 = v2x * v0x + v2y * v0y;
+  T d21 = v2x * v1x + v2y * v1y;
+  T denom = d00 * d11 - d01 * d01;
+  p.x = (d11 * d20 - d01 * d21) / denom;
+  p.y = (d00 * d21 - d01 * d20) / denom;
   return p;
 }
 
