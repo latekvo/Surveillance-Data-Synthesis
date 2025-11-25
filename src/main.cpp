@@ -121,9 +121,8 @@ int main() {
     }
 
     const AS::Point<float>* mapPoints = coordMap.cameraTrig.points;
-    AS::Point<float> a = scalePoint(mapPoints[0], scale),
-                     b = scalePoint(mapPoints[1], scale),
-                     c = scalePoint(mapPoints[2], scale);
+    AS::Point<float> a = mapPoints[0] * scale, b = mapPoints[1] * scale,
+                     c = mapPoints[2] * scale;
 
     const Vector2 vertexes[4] = {
         {a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {a.x, a.y}};
@@ -160,7 +159,7 @@ int main() {
       AS::Point barycentric =
           toBarycentric(feet, coordMap.cameraTrig) * baryScale + baryScale;
 
-      AS::Point feetScaled = scalePoint(feet, scale);
+      AS::Point feetScaled = feet * scale;
       DrawRectangleLinesEx({feetScaled.x, feetScaled.y, 4, 4}, 3.f, PINK);
       DrawRectangleLinesEx({barycentric.x, barycentric.y, 4, 4}, 3.f, PINK);
     }
