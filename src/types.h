@@ -4,8 +4,6 @@
 
 #include <opencv2/opencv.hpp>
 
-#include "types/point.hpp"
-
 struct Detection {
   uint classIdx;
   float confidence;
@@ -18,7 +16,3 @@ struct DetectionArea {
   std::vector<Detection> detections;
 };
 
-template <typename T>
-struct Triangle {
-  AS::Point<T> points[3];
-};

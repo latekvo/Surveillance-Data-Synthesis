@@ -124,8 +124,8 @@ int main() {
     AS::Point<float> a = mapPoints[0] * scale, b = mapPoints[1] * scale,
                      c = mapPoints[2] * scale;
 
-    const Vector2 vertexes[4] = {
-        {a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {a.x, a.y}};
+    const Vector2 vertexes[4] = {a.toRaylib(), b.toRaylib(), c.toRaylib(),
+                                 a.toRaylib()};
     DrawLineStrip(vertexes, 4, GREEN);
 
     float baryScale = 100;
@@ -140,22 +140,21 @@ int main() {
         toBarycentric(mapPoints[2], coordMap.cameraTrig) * baryScale +
         baryScale;
 
-    const Vector2 baVertexes[4] = {
-        {baA.x, baA.y}, {baB.x, baB.y}, {baC.x, baC.y}, {baA.x, baA.y}};
+    const Vector2 baVertexes[4] = {baA.toRaylib(), baB.toRaylib(),
+                                   baC.toRaylib(), baA.toRaylib()};
     DrawLineStrip(baVertexes, 4, WHITE);
 
     for (const Detection& detection : detections) {
       Rectangle rawRect = detection.rect;
-      Rectangle rect = scaleRect(detection.rect, scale);
+      Rectangle rect = scaleRect(rawRect, scale);
 
       const auto classname = classes[detection.classIdx].c_str();
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
 
-      AS::Point<float> feet =
-          AS::Point{rawRect.x + rawRect.width / 2, rawRect.y + rawRect.height};
+      AS::Point<float> feet = AS::Point{rawRect.x + rawRect.width / 2 - 1,
+                                        rawRect.y + rawRect.height};
 
-      // debug barycentric:
       AS::Point barycentric =
           toBarycentric(feet, coordMap.cameraTrig) * baryScale + baryScale;
 
