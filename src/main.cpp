@@ -1,5 +1,6 @@
 #include <onnxruntime_cxx_api.h>
 #include <raylib.h>
+#include <stdlib.h>
 
 #include <opencv2/opencv.hpp>
 #include <print>
@@ -46,6 +47,13 @@ int main() {
   std::vector<std::string> classes = getCocoLabels();
   std::vector<uint> allowedClassIDs = {PERSON,     BICYCLE, CAR,
                                        MOTORCYCLE, BUS,     TRUCK};
+
+  CoordMap coordMap;
+  for (const CoordMap& map : coordMaps) {
+    if (map.cameraRef == streams[0].name) {
+      coordMap = map;
+    }
+  }
 
   while (!WindowShouldClose()) {
     screenWidthTarget = GetScreenWidth();
@@ -112,27 +120,31 @@ int main() {
       DrawRectangleLinesEx(rect, 1, GREEN);
     }
 
-    for (const CoordMap& coordMap : coordMaps) {
-      if (coordMap.cameraRef != streams[0].name) {
-        continue;
-      }
+    const Point<float>* mapPoints = coordMap.cameraTrig.points;
+    Point<float> a = scalePoint(mapPoints[0], scale),
+                 b = scalePoint(mapPoints[1], scale),
+                 c = scalePoint(mapPoints[2], scale);
 
-      const Point<float>* points = coordMap.cameraTrig.points;
-      Point<float> a = scalePoint(points[0], scale),
-                   b = scalePoint(points[1], scale),
-                   c = scalePoint(points[2], scale);
-
-      const Vector2 vertexes[4] = {
-          {a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {a.x, a.y}};
-      DrawLineStrip(vertexes, 4, GREEN);
-    }
+    const Vector2 vertexes[4] = {
+        {a.x, a.y}, {b.x, b.y}, {c.x, c.y}, {a.x, a.y}};
+    DrawLineStrip(vertexes, 4, GREEN);
 
     for (const Detection& detection : detections) {
       Rectangle rect = scaleRect(detection.rect, scale);
+
+      Point barycentric =
+          remapPoint(Point{(float)rect.x, (float)rect.y}, coordMap);
+
+      std::println("BAR: x: {} y: {}", barycentric.x, barycentric.y);
       const auto classname = classes[detection.classIdx].c_str();
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
+      DrawRectangleLinesEx({barycentric.x, barycentric.y, 1, 1}, 3.f, PINK);
     }
+
+    DrawText("A", a.x, a.y, 16, PINK);
+    DrawText("B", b.x, b.y, 16, PINK);
+    DrawText("C", c.x, c.y, 16, PINK);
 
     EndDrawing();
     UnloadTexture(texture);
