@@ -143,25 +143,31 @@ int main() {
     DrawLineStrip(baVertexes, 4, WHITE);
 
     for (const Detection& detection : detections) {
+      Rectangle rawRect = detection.rect;
       Rectangle rect = scaleRect(detection.rect, scale);
 
       const auto classname = classes[detection.classIdx].c_str();
       DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
       DrawRectangleLinesEx(rect, 2.f, WHITE);
 
-      Point<float> feet = Point{rect.x + rect.width / 2, rect.y + rect.height};
+      Point<float> feet =
+          Point{rawRect.x + rawRect.width / 2, rawRect.y + rawRect.height};
 
       // debug barycentric:
       Point barycentric =
           toBarycentric(feet, coordMap.cameraTrig) * baryScale + baryScale;
 
-      DrawRectangleLinesEx({feet.x, feet.y, 4, 4}, 3.f, PINK);
+      Point feetScaled = scalePoint(feet, scale);
+      DrawRectangleLinesEx({feetScaled.x, feetScaled.y, 4, 4}, 3.f, PINK);
       DrawRectangleLinesEx({barycentric.x, barycentric.y, 4, 4}, 3.f, PINK);
     }
 
     DrawText("A", a.x, a.y, 16, PINK);
     DrawText("B", b.x, b.y, 16, PINK);
     DrawText("C", c.x, c.y, 16, PINK);
+    DrawText("A", baA.x, baA.y, 16, PINK);
+    DrawText("B", baB.x, baB.y, 16, PINK);
+    DrawText("C", baC.x, baC.y, 16, PINK);
 
     EndDrawing();
     UnloadTexture(texture);
