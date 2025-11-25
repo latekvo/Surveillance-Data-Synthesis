@@ -30,9 +30,11 @@ AS::Point<T> toBarycentric(AS::Point<T> p, const AS::Triangle<T>& t) {
 }
 
 template <typename T>
-AS::Point<T> fromBarycentric(AS::Point<T> point, const AS::Triangle<T>& trig) {
-  // Exact reverse of toBarycentric
-  return point;
+AS::Point<T> fromBarycentric(AS::Point<T> p, const AS::Triangle<T>& trig) {
+  T z = 1 - p.x - p.y;
+  p.x = trig.a.x * p.x + trig.b.x * p.y + trig.c.x * z;
+  p.y = trig.a.y * p.x + trig.b.y * p.y + trig.c.y * z;
+  return p;
 }
 
 template <typename T>
