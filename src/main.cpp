@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "coco_labels.h"
+#include "components/DetectionOverlay.hpp"
 #include "consts.h"
 #include "detection.h"
 #include "postprocess.h"
@@ -67,6 +68,9 @@ int main() {
 
     video.read(videoFrame);
 
+    float scale = screenWidthTarget / (float)videoFrame.cols;
+    screenHeight = (float)videoFrame.rows * scale;
+
     // --- DETECTION LOGIC ---
 
     constexpr float areaSize = DETECTION_SIZE;
@@ -85,8 +89,8 @@ int main() {
 
     // --- RENDERING LOGIC ---
 
-    const float scale = screenWidthTarget / (float)videoFrame.cols;
-    screenHeight = (float)videoFrame.rows * scale;
+    static auto detectionOverlay =
+        AS::DetectionOverlay(&detections, &classes, &scale);
 
     if (IsWindowResized()) {
       SetWindowSize(screenWidthTarget, screenHeight);
@@ -144,22 +148,15 @@ int main() {
                                    baC.toRaylib(), baA.toRaylib()};
     DrawLineStrip(baVertexes, 4, WHITE);
 
+    detectionOverlay.draw();
+
     for (const Detection& detection : detections) {
       Rectangle rawRect = detection.rect;
-      Rectangle rect = scaleRect(rawRect, scale);
-
-      const auto classname = classes[detection.classIdx].c_str();
-      DrawText(classname, rect.x, rect.y - 10, 6, WHITE);
-      DrawRectangleLinesEx(rect, 2.f, WHITE);
-
       AS::Point<float> feet = AS::Point{rawRect.x + rawRect.width / 2 - 1,
                                         rawRect.y + rawRect.height};
-
       AS::Point barycentric =
           toBarycentric(feet, coordMap.cameraTrig) * baryScale + baryScale;
-
       AS::Point feetScaled = feet * scale;
-      DrawRectangleLinesEx({feetScaled.x, feetScaled.y, 4, 4}, 3.f, PINK);
       DrawRectangleLinesEx({barycentric.x, barycentric.y, 4, 4}, 3.f, PINK);
     }
 
