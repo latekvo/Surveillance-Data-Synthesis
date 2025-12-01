@@ -19,4 +19,9 @@ Triangle<T> operator*(const Triangle<T>& lhs, const T& rhs) {
   return Triangle<T>{lhs.a * rhs, lhs.b * rhs, lhs.c * rhs};
 }
 
+template <typename T>
+Triangle<T> operator+(const Triangle<T>& lhs, const T& rhs) {
+  return Triangle<T>{lhs.a + rhs, lhs.b + rhs, lhs.c + rhs};
+}
+
 }  // namespace AS

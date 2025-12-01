@@ -8,6 +8,7 @@
 
 #include "coco_labels.h"
 #include "components/DetectionOverlay.hpp"
+#include "components/MinimapOverlay.hpp"
 #include "consts.h"
 #include "detection.h"
 #include "postprocess.h"
@@ -92,6 +93,9 @@ int main() {
     static auto detectionOverlay =
         AS::DetectionOverlay(&detections, &classes, &scale);
 
+    static auto minimapOverlay =
+        AS::MinimapOverlay(&detections, &coordMap, &scale);
+
     if (IsWindowResized()) {
       SetWindowSize(screenWidthTarget, screenHeight);
     }
@@ -128,44 +132,16 @@ int main() {
     AS::Point<float> a = mapPoints[0] * scale, b = mapPoints[1] * scale,
                      c = mapPoints[2] * scale;
 
+    detectionOverlay.draw();
+    minimapOverlay.draw();
+
     const Vector2 vertexes[4] = {a.toRaylib(), b.toRaylib(), c.toRaylib(),
                                  a.toRaylib()};
     DrawLineStrip(vertexes, 4, GREEN);
 
-    float baryScale = 100;
-
-    AS::Point baA =
-        toBarycentric(mapPoints[0], coordMap.cameraTrig) * baryScale +
-        baryScale;
-    AS::Point baB =
-        toBarycentric(mapPoints[1], coordMap.cameraTrig) * baryScale +
-        baryScale;
-    AS::Point baC =
-        toBarycentric(mapPoints[2], coordMap.cameraTrig) * baryScale +
-        baryScale;
-
-    const Vector2 baVertexes[4] = {baA.toRaylib(), baB.toRaylib(),
-                                   baC.toRaylib(), baA.toRaylib()};
-    DrawLineStrip(baVertexes, 4, WHITE);
-
-    detectionOverlay.draw();
-
-    for (const Detection& detection : detections) {
-      Rectangle rawRect = detection.rect;
-      AS::Point<float> feet = AS::Point{rawRect.x + rawRect.width / 2 - 1,
-                                        rawRect.y + rawRect.height};
-      AS::Point barycentric =
-          toBarycentric(feet, coordMap.cameraTrig) * baryScale + baryScale;
-      AS::Point feetScaled = feet * scale;
-      DrawRectangleLinesEx({barycentric.x, barycentric.y, 4, 4}, 3.f, PINK);
-    }
-
     DrawText("A", a.x, a.y, 16, PINK);
     DrawText("B", b.x, b.y, 16, PINK);
     DrawText("C", c.x, c.y, 16, PINK);
-    DrawText("A", baA.x, baA.y, 16, PINK);
-    DrawText("B", baB.x, baB.y, 16, PINK);
-    DrawText("C", baC.x, baC.y, 16, PINK);
 
     EndDrawing();
     UnloadTexture(texture);
