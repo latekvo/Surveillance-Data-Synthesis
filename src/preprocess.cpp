@@ -4,7 +4,7 @@
 
 #include <opencv2/opencv.hpp>
 
-cv::Mat toLetterBox(cv::Mat frame, uint64_t size) {
+cv::Mat toLetterBox(cv::Mat& frame, uint64_t size) {
   uint x = frame.cols, y = frame.rows;
   uint max = std::max(x, y);
   float scale = float(size) / float(max);
@@ -16,7 +16,7 @@ cv::Mat toLetterBox(cv::Mat frame, uint64_t size) {
   return output;
 }
 
-Ort::Value toYoloInputTensor(cv::Mat frame) {
+Ort::Value toYoloInputTensor(cv::Mat& frame) {
   cv::Mat blob;
   cv::dnn::blobFromImage(frame, blob, 1. / 255.,
                          cv::Size(frame.cols, frame.rows), true, false, CV_32F);

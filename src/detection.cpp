@@ -22,8 +22,8 @@ Rectangle scaleRect2(Rectangle rect, float scale) {
 
 // TODO: Should accept arbitrairy input size, then fragment if needed
 // For simplicity, works with arbitriary square inputs for now
-std::vector<Detection> runDetection(Ort::Session& session, cv::Mat input,
-                                    std::vector<std::string> classList) {
+std::vector<Detection> runDetection(Ort::Session& session, cv::Mat& input,
+                                    std::vector<std::string>& classList) {
   const float scale = input.cols / YOLO_SIZE;
   cv::Mat frame = toLetterBox(input, YOLO_SIZE);
 
@@ -79,7 +79,7 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat input,
 }
 
 std::vector<Detection> getDetectionsFromFrame(
-    Ort::Session& session, cv::Mat input, std::vector<std::string> classes) {
+    Ort::Session& session, cv::Mat& input, std::vector<std::string>& classes) {
   // TODO: Introduce hybrid detection:
   // - use grayskull for programmatic tracking
   // - use HOG for extracting humanoid shapes
@@ -90,8 +90,7 @@ std::vector<Detection> getDetectionsFromFrame(
   std::vector<uint> allowedClassIDs = {PERSON,     BICYCLE, CAR,
                                        MOTORCYCLE, BUS,     TRUCK};
 
-  constexpr float areaSize = DETECTION_SIZE;
-  std::vector<DetectionArea> areas = toDetectionAreas(input, areaSize);
+  std::vector<DetectionArea> areas = toDetectionAreas(input, DETECTION_SIZE);
 
   for (DetectionArea& area : areas) {
     std::vector<Detection> results = runDetection(session, area.frame, classes);

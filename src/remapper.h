@@ -1,20 +1,14 @@
 #pragma once
 
-#include <string>
 #include <vector>
 
+#include "types.h"
 #include "types/triangle.hpp"
-
-struct CoordMap {
-  std::string cameraRef;
-  AS::Triangle<float> cameraTrig;
-  AS::Triangle<float> realTrig;
-};
 
 std::vector<CoordMap> loadCoordMaps();
 
 template <typename T>
-AS::Point<T> toBarycentric(AS::Point<T> p, const AS::Triangle<T>& t) {
+AS::Point<T> toBarycentric(AS::Point<T>& p, const AS::Triangle<T>& t) {
   T v0x = t.b.x - t.a.x, v0y = t.b.y - t.a.y;
   T v1x = t.c.x - t.a.x, v1y = t.c.y - t.a.y;
   T v2x = p.x - t.a.x, v2y = p.y - t.a.y;
@@ -24,9 +18,8 @@ AS::Point<T> toBarycentric(AS::Point<T> p, const AS::Triangle<T>& t) {
   T d20 = v2x * v0x + v2y * v0y;
   T d21 = v2x * v1x + v2y * v1y;
   T denom = d00 * d11 - d01 * d01;
-  p.x = (d11 * d20 - d01 * d21) / denom;
-  p.y = (d00 * d21 - d01 * d20) / denom;
-  return p;
+  return AS::Point{(d11 * d20 - d01 * d21) / denom,
+                   (d00 * d21 - d01 * d20) / denom};
 }
 
 template <typename T>

@@ -3,7 +3,7 @@
 #include <onnxruntime_cxx_api.h>
 #include <raylib.h>
 
-Rectangle scaleRect(Rectangle rect, float scale) {
+Rectangle scaleRect(Rectangle& rect, float scale) {
   return Rectangle{
       rect.x * scale,
       rect.y * scale,

@@ -2,8 +2,6 @@
 
 #include <string>
 
-typedef unsigned int uint;
-
 constexpr int TARGET_FPS = 20;
 
 constexpr float YOLO_SIZE = 640.0;

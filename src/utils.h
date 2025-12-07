@@ -5,7 +5,7 @@
 
 #include <opencv2/opencv.hpp>
 
-Rectangle scaleRect(Rectangle rect, float scale);
+Rectangle scaleRect(Rectangle& rect, float scale);
 std::vector<std::string> splitString(const std::string& txt, char ch);
 
 template <typename T>

@@ -7,6 +7,5 @@
 
 #include "types.h"
 
-std::vector<Detection> getDetectionsFromFrame(Ort::Session& session,
-                                              cv::Mat input,
-                                              std::vector<std::string> classes);
+std::vector<Detection> getDetectionsFromFrame(
+    Ort::Session& session, cv::Mat& input, std::vector<std::string>& classes);
