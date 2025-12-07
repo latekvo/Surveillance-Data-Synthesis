@@ -5,8 +5,10 @@
 
 #include <opencv2/opencv.hpp>
 #include <print>
+#include <vector>
 
 #include "consts.h"
+#include "postprocess.h"
 #include "preprocess.h"
 
 Rectangle scaleRect2(Rectangle rect, float scale) {
@@ -74,4 +76,30 @@ std::vector<Detection> runDetection(Ort::Session& session, cv::Mat input,
   }
 
   return detections;
+}
+
+std::vector<Detection> getDetectionsFromFrame(
+    Ort::Session& session, cv::Mat input, std::vector<std::string> classes) {
+  // TODO: Introduce hybrid detection:
+  // - use grayskull for programmatic tracking
+  // - use HOG for extracting humanoid shapes
+  // - use YOLO for verifying hits (in a spearate function,
+  //   cram multiple detections into a single YOLO frame mosaic).
+
+  // TODO: move to config
+  std::vector<uint> allowedClassIDs = {PERSON,     BICYCLE, CAR,
+                                       MOTORCYCLE, BUS,     TRUCK};
+
+  constexpr float areaSize = DETECTION_SIZE;
+  std::vector<DetectionArea> areas = toDetectionAreas(input, areaSize);
+
+  for (DetectionArea& area : areas) {
+    std::vector<Detection> results = runDetection(session, area.frame, classes);
+    area.detections.insert(area.detections.end(), results.begin(),
+                           results.end());
+  }
+
+  std::vector<Detection> unfilteredDetections = mergeDetectionAreas(areas);
+
+  return toFilteredDetections(unfilteredDetections, allowedClassIDs);
 }
