@@ -9,6 +9,7 @@
 #include "coco_labels.h"
 #include "components/DetectionOverlay.hpp"
 #include "components/MinimapOverlay.hpp"
+#include "components/ObservedArea.hpp"
 #include "components/PixelPicker.hpp"
 #include "consts.h"
 #include "detection.h"
@@ -94,6 +95,8 @@ int main() {
 
     static auto pixelPicker = AS::PixelPicker(&scale);
 
+    static auto observedArea = AS::ObservedArea(&coordMap, &scale);
+
     if (IsWindowResized()) {
       SetWindowSize(screenWidthTarget, screenHeight);
     }
@@ -118,21 +121,10 @@ int main() {
 
     DrawTexture(texture, 0, 0, WHITE);
 
-    const AS::Point<float>* mapPoints = coordMap.cameraTrig.points;
-    AS::Point<float> a = mapPoints[0] * scale, b = mapPoints[1] * scale,
-                     c = mapPoints[2] * scale;
-
     detectionOverlay.draw();
     minimapOverlay.draw();
     pixelPicker.draw();
-
-    const Vector2 vertexes[4] = {a.toRaylib(), b.toRaylib(), c.toRaylib(),
-                                 a.toRaylib()};
-    DrawLineStrip(vertexes, 4, GREEN);
-
-    DrawText("A", a.x, a.y, 16, PINK);
-    DrawText("B", b.x, b.y, 16, PINK);
-    DrawText("C", c.x, c.y, 16, PINK);
+    observedArea.draw();
 
     EndDrawing();
     UnloadTexture(texture);
