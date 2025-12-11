@@ -9,6 +9,7 @@
 #include "coco_labels.h"
 #include "components/DetectionOverlay.hpp"
 #include "components/MinimapOverlay.hpp"
+#include "components/PixelPicker.hpp"
 #include "consts.h"
 #include "detection.h"
 #include "remapper.h"
@@ -91,6 +92,8 @@ int main() {
     static auto minimapOverlay =
         AS::MinimapOverlay(&detections, &coordMap, &scale);
 
+    static auto pixelPicker = AS::PixelPicker(&scale);
+
     if (IsWindowResized()) {
       SetWindowSize(screenWidthTarget, screenHeight);
     }
@@ -121,6 +124,7 @@ int main() {
 
     detectionOverlay.draw();
     minimapOverlay.draw();
+    pixelPicker.draw();
 
     const Vector2 vertexes[4] = {a.toRaylib(), b.toRaylib(), c.toRaylib(),
                                  a.toRaylib()};
