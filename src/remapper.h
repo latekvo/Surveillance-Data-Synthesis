@@ -8,7 +8,7 @@
 std::vector<CoordMap> loadCoordMaps();
 
 template <typename T>
-AS::Point<T> toBarycentric(AS::Point<T>& p, const AS::Triangle<T>& t) {
+AS::Point<T> toBarycentric(const AS::Point<T>& p, const AS::Triangle<T>& t) {
   T v0x = t.b.x - t.a.x, v0y = t.b.y - t.a.y;
   T v1x = t.c.x - t.a.x, v1y = t.c.y - t.a.y;
   T v2x = p.x - t.a.x, v2y = p.y - t.a.y;
@@ -31,8 +31,16 @@ AS::Point<T> fromBarycentric(const AS::Point<T>& p,
 }
 
 template <typename T>
-AS::Point<T> remapPoint(const AS::Point<T>& point, const CoordMap& coordMap) {
-  AS::Point bPoint = fromBarycentric(point, coordMap.realTrig);
-  return toBarycentric(bPoint, coordMap.cameraTrig);
+AS::Point<T> remapPointToReal(const AS::Point<T>& point,
+                              const CoordMap& coordMap) {
+  AS::Point bPoint = toBarycentric(point, coordMap.cameraTrig);
+  return fromBarycentric(bPoint, coordMap.realTrig);
+}
+
+template <typename T>
+AS::Point<T> remapPointToCamera(const AS::Point<T>& point,
+                                const CoordMap& coordMap) {
+  AS::Point bPoint = toBarycentric(point, coordMap.realTrig);
+  return fromBarycentric(bPoint, coordMap.cameraRef);
 }
 
