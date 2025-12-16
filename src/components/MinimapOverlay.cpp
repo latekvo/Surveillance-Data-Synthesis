@@ -8,6 +8,32 @@
 
 namespace AS {
 
+// This is a temporary solution.
+// We'll want to adjust recangles into bounds in the future.
+// FIXME: We want to apply this to minimap detections as well
+// TODO: Move to centralized detections registry
+void resizeTriangle(AS::Triangle<float>& t, float squareSize) {
+  Point<float> shift{t.a.x, t.a.y};
+
+  if (t.b.x < shift.x) shift.x = t.b.x;
+  if (t.c.x < shift.x) shift.x = t.c.x;
+  if (t.b.y < shift.y) shift.y = t.b.y;
+  if (t.c.y < shift.y) shift.y = t.c.y;
+
+  t -= shift;
+
+  float scale = t.a.x;
+
+  if (t.b.x > scale) scale = t.b.x;
+  if (t.c.x > scale) scale = t.c.x;
+  if (t.a.y > scale) scale = t.a.y;
+  if (t.b.y > scale) scale = t.b.y;
+  if (t.c.y > scale) scale = t.c.y;
+
+  t /= scale;
+  t *= squareSize;
+}
+
 MinimapOverlay::MinimapOverlay(std::vector<Detection>* detections,
                                CoordMap* coordMap, float* scale)
     : detectionsPtr(detections), coordMapPtr(coordMap), scalePtr(scale) {}
@@ -21,18 +47,21 @@ void MinimapOverlay::draw() {
   CoordMap& map = *this->coordMapPtr;
   Triangle<float>& cTrig = map.cameraTrig;
 
-  Triangle<float> oTrig{
+  Triangle<float> rTrig{
       remapPointToReal(cTrig.a, map),
       remapPointToReal(cTrig.b, map),
       remapPointToReal(cTrig.c, map),
   };
 
-  DrawText("A", oTrig.a.x, oTrig.a.y, 16, PINK);
-  DrawText("B", oTrig.b.x, oTrig.b.y, 16, PINK);
-  DrawText("C", oTrig.c.x, oTrig.c.y, 16, PINK);
+  resizeTriangle(rTrig, 100.f);
+  rTrig += 50.f;
 
-  const Vector2 baVertexes[4] = {oTrig.a.toRaylib(), oTrig.b.toRaylib(),
-                                 oTrig.c.toRaylib(), oTrig.a.toRaylib()};
+  DrawText("A", rTrig.a.x, rTrig.a.y, 16, PINK);
+  DrawText("B", rTrig.b.x, rTrig.b.y, 16, PINK);
+  DrawText("C", rTrig.c.x, rTrig.c.y, 16, PINK);
+
+  const Vector2 baVertexes[4] = {rTrig.a.toRaylib(), rTrig.b.toRaylib(),
+                                 rTrig.c.toRaylib(), rTrig.a.toRaylib()};
 
   DrawLineStrip(baVertexes, 4, WHITE);
 
