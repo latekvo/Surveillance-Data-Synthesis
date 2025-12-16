@@ -78,12 +78,16 @@ int main() {
     // }
 
     video.read(videoFrame);
+    cv::cvtColor(videoFrame, videoFrame, cv::COLOR_BGR2RGB);
 
     float scale = screenWidthTarget / (float)videoFrame.cols;
     screenHeight = (float)videoFrame.rows * scale;
 
     std::vector<Detection> detections =
         getDetectionsFromFrame(onnxSession, videoFrame, classes);
+
+    cv::resize(videoFrame, videoFrame,
+               cv::Size(screenWidthTarget, screenHeight));
 
     // --- RENDERING LOGIC ---
 
@@ -101,13 +105,6 @@ int main() {
       SetWindowSize(screenWidthTarget, screenHeight);
     }
 
-    cv::resize(videoFrame, videoFrame,
-               cv::Size(screenWidthTarget, screenHeight));
-
-    // TODO: Apply this to YOLO input too?
-    // OpenCV and raylib use different pixel formats
-    cv::cvtColor(videoFrame, videoFrame, cv::COLOR_BGR2RGB);
-
     // remap OpenCV to raylib image, no copy, using shared memory
     rayImage.data = videoFrame.data;
     rayImage.width = videoFrame.cols;
@@ -121,10 +118,15 @@ int main() {
 
     DrawTexture(texture, 0, 0, WHITE);
 
-    detectionOverlay.draw();
-    minimapOverlay.draw();
-    pixelPicker.draw();
-    observedArea.draw();
+    // NOTE: We want to keep one minimap for all views
+    // NOTE: We want to perform optimization
+    // TODO: Detections have to be performed centrally - outside of components
+    // TODO: Add a central detections registry - aggregated by camera id, async
+
+    detectionOverlay.draw();  // TODO: -> CameraView
+    minimapOverlay.draw();    // TODO: Keep
+    pixelPicker.draw();       // TODO: Keep
+    observedArea.draw();      // TODO: -> CameraView
 
     EndDrawing();
     UnloadTexture(texture);
