@@ -14,14 +14,80 @@ struct Triangle {
   };
 };
 
+/*==============*\
+ * Triangle x T *
+\*==============*/
+
+// --- x ---
+
 template <typename T>
-Triangle<T> operator*(const Triangle<T>& lhs, const T& rhs) {
-  return Triangle<T>{lhs.a * rhs, lhs.b * rhs, lhs.c * rhs};
+Triangle<T> operator+(const Triangle<T>& lhs, const T rhs) {
+  return Triangle<T>{lhs.a + rhs, lhs.b + rhs, lhs.c + rhs};
 }
 
 template <typename T>
-Triangle<T> operator+(const Triangle<T>& lhs, const T& rhs) {
+Triangle<T> operator*(const Triangle<T>& lhs, const T rhs) {
+  return Triangle<T>{lhs.a * rhs, lhs.b * rhs, lhs.c * rhs};
+}
+
+// --- x= ---
+
+template <typename T>
+Triangle<T>& operator+=(Triangle<T>& lhs, const T rhs) {
+  lhs.a += rhs;
+  lhs.b += rhs;
+  lhs.c += rhs;
+  return lhs;
+}
+
+template <typename T>
+Triangle<T>& operator*=(Triangle<T>& lhs, const T rhs) {
+  lhs.a *= rhs;
+  lhs.b *= rhs;
+  lhs.c *= rhs;
+  return lhs;
+}
+
+template <typename T>
+Triangle<T>& operator/=(Triangle<T>& lhs, const T rhs) {
+  lhs.a /= rhs;
+  lhs.b /= rhs;
+  lhs.c /= rhs;
+  return lhs;
+}
+
+/*==================*\
+ * Triangle x Point *
+\*==================*/
+
+// --- x ---
+
+template <typename T>
+Triangle<T> operator+(const Triangle<T>& lhs, const Point<T>& rhs) {
   return Triangle<T>{lhs.a + rhs, lhs.b + rhs, lhs.c + rhs};
+}
+
+template <typename T>
+Triangle<T> operator-(const Triangle<T>& lhs, const Point<T>& rhs) {
+  return Triangle<T>{lhs.a - rhs, lhs.b - rhs, lhs.c - rhs};
+}
+
+// --- x= ---
+
+template <typename T>
+Triangle<T>& operator+=(Triangle<T>& lhs, const Point<T>& rhs) {
+  lhs.a += rhs;
+  lhs.b += rhs;
+  lhs.c += rhs;
+  return lhs;
+}
+
+template <typename T>
+Triangle<T>& operator-=(Triangle<T>& lhs, const Point<T>& rhs) {
+  lhs.a -= rhs;
+  lhs.b -= rhs;
+  lhs.c -= rhs;
+  return lhs;
 }
 
 }  // namespace AS

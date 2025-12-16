@@ -24,6 +24,12 @@ Vector2 Point<T>::toRaylib() {
   return Vector2(this->x, this->y);
 }
 
+/*===========*\
+ * Point x T *
+\*===========*/
+
+// --- x ---
+
 template <typename T>
 Point<T> operator+(const Point<T>& lhs, const T& rhs) {
   return Point<T>{lhs.x + rhs, lhs.y + rhs};
@@ -52,6 +58,54 @@ Point<T> operator+(const Point<T>& lhs, const Point<T>& rhs) {
 template <typename T>
 Point<T> operator-(const Point<T>& lhs, const Point<T>& rhs) {
   return Point<T>{lhs.x - rhs.x, lhs.y - rhs.y};
+}
+
+// --- x= ---
+
+template <typename T>
+Point<T>& operator+=(Point<T>& lhs, const T rhs) {
+  lhs.x += rhs;
+  lhs.y += rhs;
+  return lhs;
+}
+
+template <typename T>
+Point<T>& operator-=(Point<T>& lhs, const T rhs) {
+  lhs.x -= rhs;
+  lhs.y -= rhs;
+  return lhs;
+}
+
+template <typename T>
+Point<T>& operator*=(Point<T>& lhs, const T rhs) {
+  lhs.x *= rhs;
+  lhs.y *= rhs;
+  return lhs;
+}
+
+template <typename T>
+Point<T>& operator/=(Point<T>& lhs, const T rhs) {
+  lhs.x /= rhs;
+  lhs.y /= rhs;
+  return lhs;
+}
+
+/*===============*\
+ * Point x Point *
+\*===============*/
+
+template <typename T>
+Point<T>& operator+=(Point<T>& lhs, const Point<T>& rhs) {
+  lhs.x += rhs.x;
+  lhs.y += rhs.y;
+  return lhs;
+}
+
+template <typename T>
+Point<T>& operator-=(Point<T>& lhs, const Point<T>& rhs) {
+  lhs.x -= rhs.x;
+  lhs.y -= rhs.y;
+  return lhs;
 }
 
 }  // namespace AS
