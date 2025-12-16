@@ -18,6 +18,7 @@ models/
 *.onnx
 
 # CMake
+build/
 .cache/
 CMakeFiles/
 CMakeCache.txt
