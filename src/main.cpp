@@ -49,10 +49,6 @@ int main() {
 
   cv::Mat videoFrame;
   cv::Mat detectionFrame;
-  Image rayImage;
-
-  rayImage.mipmaps = 1;
-  rayImage.format = PIXELFORMAT_UNCOMPRESSED_R8G8B8;
 
   const Ort::Env oxxnEnv(ORT_LOGGING_LEVEL_WARNING, "TTGL");
   const Ort::SessionOptions oxxnOptions;
@@ -95,35 +91,28 @@ int main() {
 
     static auto pixelPicker = AS::PixelPicker(&scale);
 
-    static auto cameraView = AS::CameraView({}, &scale, &detections, &coordMap);
+    static auto cameraView =
+        AS::CameraView({}, &scale, &detections, &coordMap, &videoFrame);
 
     if (IsWindowResized()) {
       SetWindowSize(screenWidthTarget, screenHeight);
     }
 
-    // remap OpenCV to raylib image, no copy, using shared memory
-    rayImage.data = videoFrame.data;
-    rayImage.width = videoFrame.cols;
-    rayImage.height = videoFrame.rows;
-
-    Texture2D texture = LoadTextureFromImage(rayImage);
-
     // --- DRAWING CALLS ---
     BeginDrawing();
     ClearBackground(RAYWHITE);
-
-    DrawTexture(texture, 0, 0, WHITE);
 
     // NOTE: Detections have to be performed centrally - outside of components
     // TODO: Add a central detections registry - aggregated by camera id, async
     // TODO: Isolate detections to separate threat to fix large delays
 
+    cameraView.draw();
     minimapOverlay.draw();
     pixelPicker.draw();
-    cameraView.draw();
 
     EndDrawing();
-    UnloadTexture(texture);
+
+    cameraView.postRender();
   }
 
   CloseWindow();

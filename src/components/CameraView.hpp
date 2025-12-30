@@ -2,6 +2,7 @@
 
 #include <raylib.h>
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -21,12 +22,18 @@ class CameraView : AS::BaseComponent {
   CoordMap* coordMapPtr;
   DetectionOverlay detectionOverlay;
   ObservedArea observedArea;
+  Image rayImage;
+  cv::Mat* videoFramePtr;
+
+  std::unique_ptr<Texture2D> texturePtr;
 
  public:
   CameraView(Rectangle* bounds, float* scale,
-             std::vector<Detection>* detections, CoordMap* coordMap);
+             std::vector<Detection>* detections, CoordMap* coordMap,
+             cv::Mat* videoFrame);
 
   void draw() override;
+  void postRender() override;
 };
 
 }  // namespace AS
