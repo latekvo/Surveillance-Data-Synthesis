@@ -7,9 +7,8 @@
 #include <vector>
 
 #include "coco_labels.h"
-#include "components/DetectionOverlay.hpp"
+#include "components/CameraView.hpp"
 #include "components/MinimapOverlay.hpp"
-#include "components/ObservedArea.hpp"
 #include "components/PixelPicker.hpp"
 #include "consts.h"
 #include "detection.h"
@@ -91,15 +90,12 @@ int main() {
 
     // --- RENDERING LOGIC ---
 
-    static auto detectionOverlay =
-        AS::DetectionOverlay(&detections, &classes, &scale);
-
     static auto minimapOverlay =
         AS::MinimapOverlay(&detections, &coordMap, &scale);
 
     static auto pixelPicker = AS::PixelPicker(&scale);
 
-    static auto observedArea = AS::ObservedArea(&coordMap, &scale);
+    static auto cameraView = AS::CameraView({}, &scale, &detections, &coordMap);
 
     if (IsWindowResized()) {
       SetWindowSize(screenWidthTarget, screenHeight);
@@ -118,15 +114,13 @@ int main() {
 
     DrawTexture(texture, 0, 0, WHITE);
 
-    // NOTE: We want to keep one minimap for all views
-    // NOTE: We want to perform optimization
-    // TODO: Detections have to be performed centrally - outside of components
+    // NOTE: Detections have to be performed centrally - outside of components
     // TODO: Add a central detections registry - aggregated by camera id, async
+    // TODO: Isolate detections to separate threat to fix large delays
 
-    detectionOverlay.draw();  // TODO: -> CameraView
-    minimapOverlay.draw();    // TODO: Keep
-    pixelPicker.draw();       // TODO: Keep
-    observedArea.draw();      // TODO: -> CameraView
+    minimapOverlay.draw();
+    pixelPicker.draw();
+    cameraView.draw();
 
     EndDrawing();
     UnloadTexture(texture);

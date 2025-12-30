@@ -6,6 +6,8 @@
 
 #include "consts.h"
 
+// TODO: Cache coco labels
+
 std::vector<std::string> getCocoLabels() {
   std::vector<std::string> out;
   std::string line;
