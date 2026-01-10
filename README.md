@@ -1,5 +1,11 @@
 # TTGL
 
+<img width="1286" height="746" alt="ttgl_preview" src="https://github.com/user-attachments/assets/2c82c521-566d-4411-a8ca-9e4568f74578" />
+
+### Purpose
+
+Track concurrent live CCTV data streams, map each tracked object onto a central map, never lose track of entities even as they leave the premises tracked by a single camera.
+
 ### Prerequisites
 
 - Install: `OpenCV`, `raylib`, `onnxruntime`
